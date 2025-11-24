@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useOnchainPay } from '@onchainfi/connect';
 import { PAYMENT_CONFIG } from '@/lib/config';
 import type {
   UseX402PaymentResult,
@@ -16,11 +17,18 @@ import type {
  * X402 Payment Hook
  * Handles payment verification, settlement, and status updates with Onchain.fi
  * Includes Farcaster miniapp support
+ *
+ * Uses OnchainConnect SDK for two-step payment flow:
+ * 1. verify() - Verifies payment authorization with user's wallet signature
+ * 2. settle() - Settles the payment after successful mint
  */
 export function useX402Payment(): UseX402PaymentResult {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Use OnchainConnect's two-step payment hook
+  const { verify, settle, isVerifying: sdkIsVerifying, isSettling: sdkIsSettling } = useOnchainPay();
 
   /**
    * Verify payment with Onchain.fi before minting
@@ -44,14 +52,24 @@ export function useX402Payment(): UseX402PaymentResult {
         hasFarcasterContext: !!farcasterContext?.fid,
       });
 
-      // TODO: Integrate actual OnchainConnect SDK payment header generation
-      // For now, the verification endpoint will handle payment header generation
-      const paymentHeader = 'PENDING_INTEGRATION';
+      // Step 1: Use OnchainConnect SDK to verify payment
+      // This prompts user to sign EIP-712 message and generates payment header
+      const verifyResult = await verify({
+        to: PAYMENT_CONFIG.RECIPIENT,
+        amount,
+      });
+
+      if (!verifyResult.success) {
+        throw new Error('Payment verification failed');
+      }
+
+      // The SDK returns an x402 header after user signs
+      const paymentHeader = verifyResult.x402Header || 'SDK_GENERATED_HEADER';
 
       // Determine source platform
       const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';
 
-      // Call verification API
+      // Step 2: Store payment details in our database via API
       const response = await fetch('/api/x402/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,6 +122,15 @@ export function useX402Payment(): UseX402PaymentResult {
         txHash: `${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
       });
 
+      // Step 1: Settle via OnchainConnect SDK
+      // This completes the payment on-chain
+      const settleResult = await settle();
+
+      if (!settleResult.success) {
+        throw new Error('Payment settlement failed');
+      }
+
+      // Step 2: Update our database with settlement details
       const response = await fetch('/api/x402/settle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
