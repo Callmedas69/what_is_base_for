@@ -12,9 +12,10 @@ interface MintSectionProps {
   remainingCustomMints: number;
   isPaused: boolean;
   isSoldOut: boolean;
+  walletAddress?: string;
   onPhrasesChange: (phrases: string[]) => void;
   onRegularMint: () => void;
-  onCustomMint: () => void;
+  onCustomMint: (paymentData: { paymentId: string; paymentHeader: string }) => void;
 }
 
 export function MintSection({
@@ -26,6 +27,7 @@ export function MintSection({
   remainingCustomMints,
   isPaused,
   isSoldOut,
+  walletAddress,
   onPhrasesChange,
   onRegularMint,
   onCustomMint,
@@ -49,9 +51,9 @@ export function MintSection({
         isProcessing={isProcessing}
         isMinting={isProcessing && mintType === "custom"}
         phrases={phrases}
-        remainingMints={remainingCustomMints}
         isPaused={isPaused}
         isSoldOut={isSoldOut}
+        walletAddress={walletAddress}
         onPhrasesChange={onPhrasesChange}
         onMint={onCustomMint}
       />

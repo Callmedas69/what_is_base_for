@@ -3,10 +3,10 @@
  */
 
 export { Header } from "./Header";
-export { Footer } from "./Footer";
 export { AudioPlayer } from "./AudioPlayer";
 export { TokenDisplay } from "./TokenDisplay";
 export { MintSection } from "./MintSection";
 export { RegularMint } from "./RegularMint";
 export { CustomMint } from "./CustomMint";
 export { StatusMessages } from "./StatusMessages";
+export { PhraseSelector } from "./PhraseSelector";

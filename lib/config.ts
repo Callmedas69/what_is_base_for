@@ -106,4 +106,29 @@ export const MESSAGES = {
   MINT_SUCCESS: "Successfully minted!",
   MINT_ERROR: "Minting failed. Please try again.",
   TRANSACTION_PENDING: "Waiting for transaction confirmation...",
+  PAYMENT_VERIFYING: "Verifying payment...",
+  PAYMENT_SETTLING: "Settling payment...",
+  PAYMENT_FAILED: "Payment failed. Please try again.",
+  INSUFFICIENT_BALANCE: "Insufficient USDC balance.",
+} as const;
+
+/**
+ * X402 Payment Configuration
+ * Full-featured with Farcaster support
+ */
+export const PAYMENT_CONFIG = {
+  ENABLED: true,
+  PRICES: {
+    1: '0.20',
+    2: '0.40',
+    3: '0.30', // Best value - 50% discount!
+  } as const,
+  PRICING_DISPLAY: {
+    1: { price: '0.20', label: '1 phrase' },
+    2: { price: '0.40', label: '2 phrases' },
+    3: { price: '0.30', label: '3 phrases', badge: 'Best Value!' },
+  } as const,
+  TOKEN: 'USDC' as const,
+  NETWORK: 'base' as const,
+  RECIPIENT: process.env.NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS || '',
 } as const;

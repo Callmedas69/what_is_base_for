@@ -6,7 +6,10 @@
       "Bash(taskkill:*)",
       "Bash(nul)",
       "WebSearch",
-      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\components\\Footer.tsx\")"
+      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\components\\Footer.tsx\")",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

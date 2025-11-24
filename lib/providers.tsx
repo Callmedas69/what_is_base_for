@@ -2,30 +2,18 @@
 
 /**
  * Client-side Providers
- * Wraps the app with Wagmi and RainbowKit providers
+ * Wraps the app with OnchainConnect (Privy + Wagmi + Onchain payments)
  */
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
-import { wagmiConfig } from "./wagmi";
-import "@rainbow-me/rainbowkit/styles.css";
-
-const queryClient = new QueryClient();
+import { OnchainConnect } from "@onchainfi/connect";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          theme={lightTheme({
-            accentColor: "#0000ff",
-            borderRadius: "medium",
-          })}
-        >
-          {children}
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <OnchainConnect
+      privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+      onchainApiKey={process.env.NEXT_PUBLIC_ONCHAIN_API_KEY!}
+    >
+      {children}
+    </OnchainConnect>
   );
 }

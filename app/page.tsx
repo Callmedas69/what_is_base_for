@@ -11,6 +11,7 @@ import {
 import { parseEventLogs } from "viem";
 import { BASEFOR_ABI, areValidPhrases } from "@/abi/Basefor.abi";
 import { CONTRACTS, MESSAGES, CHAIN_CONFIG } from "@/lib/config";
+import { useX402Payment } from "@/hooks/useX402Payment";
 import { Header } from "@/components/Header";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { TokenDisplay } from "@/components/TokenDisplay";
@@ -24,8 +25,13 @@ export default function Home() {
   const [mintedTokenId, setMintedTokenId] = useState<bigint | null>(null);
   const [animationUrl, setAnimationUrl] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
+  const [paymentData, setPaymentData] = useState<{
+    paymentId: string;
+    paymentHeader: string;
+  } | null>(null);
 
   const { data: hash, writeContract, isPending } = useWriteContract();
+  const { settlePayment, updateMintStatus } = useX402Payment();
 
   const {
     data: receipt,
@@ -126,35 +132,19 @@ export default function Home() {
     });
   };
 
-  // Handle custom mint with phrases
-  const handleCustomMint = () => {
-    if (!isConnected) {
-      alert(MESSAGES.CONNECT_WALLET);
-      return;
-    }
+  // Handle custom mint with payment data
+  const handleCustomMint = async (payment: {
+    paymentId: string;
+    paymentHeader: string;
+  }) => {
+    // Store payment data for later settlement
+    setPaymentData(payment);
 
-    if (isPaused) {
-      alert("Minting is currently paused. Please try again later.");
-      return;
-    }
-
-    if (isSoldOut) {
-      alert("Collection is sold out!");
-      return;
-    }
-
-    if (remainingCustomMints <= 0) {
-      alert(
-        `You've reached the custom mint limit (${Number(
-          customMinted
-        )}/10). No more custom mints available.`
-      );
-      return;
-    }
-
-    if (!areValidPhrases(phrases[0], phrases[1], phrases[2])) {
-      alert(MESSAGES.INVALID_PHRASES);
-      return;
+    // Update mint status to "minting"
+    try {
+      await updateMintStatus(payment.paymentId, "minting");
+    } catch (error) {
+      console.error("[Home] Failed to update mint status:", error);
     }
 
     // Auto-wrap phrases with curly brackets for better UX
@@ -171,28 +161,63 @@ export default function Home() {
     });
   };
 
-  // Extract token ID from transaction receipt
+  // Extract token ID from transaction receipt and settle payment
   useEffect(() => {
     if (!receipt || !isSuccess) return;
 
-    try {
-      const logs = parseEventLogs({
-        abi: BASEFOR_ABI,
-        eventName: "Transfer",
-        logs: receipt.logs,
-      });
+    const handleMintSuccess = async () => {
+      try {
+        const logs = parseEventLogs({
+          abi: BASEFOR_ABI,
+          eventName: "Transfer",
+          logs: receipt.logs,
+        });
 
-      if (logs.length > 0 && logs[0].args.tokenId) {
-        // Intentionally updating state with parsed blockchain event data
-        // This only runs once per successful transaction, no cascading renders
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMintedTokenId(logs[0].args.tokenId);
-        setShowModal(true);
+        if (logs.length > 0 && logs[0].args.tokenId) {
+          const tokenId = logs[0].args.tokenId;
+          const txHash = receipt.transactionHash;
+
+          // Intentionally updating state with parsed blockchain event data
+          // This only runs once per successful transaction, no cascading renders
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setMintedTokenId(tokenId);
+          setShowModal(true);
+
+          // Settle payment if this was a paid custom mint
+          if (paymentData && mintType === "custom") {
+            console.log("[Home] Settling payment after successful mint");
+            try {
+              await settlePayment(
+                paymentData.paymentId,
+                paymentData.paymentHeader,
+                tokenId,
+                txHash
+              );
+              console.log("[Home] Payment settled successfully");
+            } catch (error) {
+              console.error("[Home] Failed to settle payment:", error);
+              // Still show success modal even if settlement fails
+              // Settlement can be retried from backend
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing transaction logs:", error);
+
+        // Update mint status to failed if payment was initiated
+        if (paymentData && mintType === "custom") {
+          await updateMintStatus(
+            paymentData.paymentId,
+            "failed",
+            error instanceof Error ? error.message : "Unknown error",
+            "MINT_FAILED"
+          );
+        }
       }
-    } catch (error) {
-      console.error("Error parsing transaction logs:", error);
-    }
-  }, [receipt, isSuccess]);
+    };
+
+    handleMintSuccess();
+  }, [receipt, isSuccess, paymentData, mintType, settlePayment, updateMintStatus]);
 
   // Parse tokenURI to get animation_url
   useEffect(() => {
@@ -219,6 +244,7 @@ export default function Home() {
     setMintType(null);
     setMintedTokenId(null);
     setAnimationUrl("");
+    setPaymentData(null);
   };
 
   const isProcessing = isPending || isConfirming;
@@ -374,6 +400,7 @@ export default function Home() {
                 remainingCustomMints={remainingCustomMints}
                 isPaused={isPaused}
                 isSoldOut={isSoldOut}
+                walletAddress={address}
                 onPhrasesChange={setPhrases}
                 onRegularMint={handleRegularMint}
                 onCustomMint={handleCustomMint}
