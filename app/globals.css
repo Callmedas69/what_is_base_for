@@ -1,26 +1,134 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Custom Fonts */
+@font-face {
+  font-family: "Base Sans";
+  src: url("/fonts/baseSans_regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
+
+@font-face {
+  font-family: "Base Sans";
+  src: url("/fonts/baseSans_bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Doto";
+  src: url("/fonts/doto-v3-latin-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Base Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Doto", ui-monospace, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Base Color Palette - Core */
+  --base-blue: #0000ff;
+  --base-cerulean: #3c8aff;
+  --base-gray-0: #ffffff;
+  --base-gray-10: #eef0f3;
+  --base-gray-15: #dee1e7;
+  --base-gray-30: #b1b7c3;
+  --base-gray-50: #717886;
+  --base-gray-60: #5b616e;
+  --base-gray-80: #32353d;
+  --base-gray-100: #0a0b0d;
+
+  /* Base Color Palette - Secondary */
+  --base-tan: #b8a581;
+  --base-yellow: #ffd12f;
+  --base-green: #66c800;
+  --base-lime: #b6f569;
+  --base-red: #fc401f;
+  --base-pink: #fea8cd;
+
+  /* Theme Configuration - Light Mode (Default) */
+  --radius: 0.625rem;
+  --background: var(--base-gray-0);
+  --foreground: var(--base-gray-100);
+  --card: var(--base-gray-0);
+  --card-foreground: var(--base-gray-100);
+  --popover: var(--base-gray-0);
+  --popover-foreground: var(--base-gray-100);
+  --primary: var(--base-blue);
+  --primary-foreground: var(--base-gray-0);
+  --secondary: var(--base-gray-10);
+  --secondary-foreground: var(--base-gray-100);
+  --muted: var(--base-gray-10);
+  --muted-foreground: var(--base-gray-60);
+  --accent: var(--base-cerulean);
+  --accent-foreground: var(--base-gray-0);
+  --destructive: var(--base-red);
+  --border: var(--base-gray-15);
+  --input: var(--base-gray-15);
+  --ring: var(--base-blue);
+  --success: var(--base-green);
+  --warning: var(--base-yellow);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
+  body {
+    @apply bg-background text-foreground;
+  }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Remove scrollbars from iframes */
+  iframe {
+    overflow: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  iframe::-webkit-scrollbar {
+    display: none;
+  }
 }

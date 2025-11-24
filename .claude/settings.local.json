@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(taskkill:*)",
+      "Bash(nul)",
+      "WebSearch",
+      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\components\\Footer.tsx\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

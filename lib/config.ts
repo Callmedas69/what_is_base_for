@@ -1,0 +1,109 @@
+/**
+ * Centralized Configuration
+ * Single source of truth for all app constants and settings
+ */
+
+import { CONTRACT_ADDRESSES, type NetworkConfig } from "@/abi/Basefor.abi";
+
+/**
+ * Current Network Configuration
+ * Change this to switch networks
+ */
+export const CURRENT_NETWORK = "baseSepolia" as const;
+
+/**
+ * Network Configuration (from contract addresses)
+ */
+export const NETWORK_CONFIG: NetworkConfig = CONTRACT_ADDRESSES[CURRENT_NETWORK];
+
+/**
+ * Contract Addresses
+ */
+export const CONTRACTS = {
+  BASEFOR: NETWORK_CONFIG.basefor,
+  ASSETS: NETWORK_CONFIG.assets,
+  RENDERER: NETWORK_CONFIG.renderer,
+  PHRASES: NETWORK_CONFIG.phrases,
+  FONT: NETWORK_CONFIG.font,
+} as const;
+
+/**
+ * Chain Configuration
+ */
+export const CHAIN_CONFIG = {
+  CHAIN_ID: NETWORK_CONFIG.chainId,
+  EXPLORER: NETWORK_CONFIG.explorer,
+  BASESCAN: NETWORK_CONFIG.basescan,
+} as const;
+
+/**
+ * Minting Limits
+ */
+export const MINT_LIMITS = {
+  MAX_SUPPLY: NETWORK_CONFIG.maxSupply,
+  MAX_PER_WALLET: NETWORK_CONFIG.maxPerWallet,
+  MAX_REGULAR_MINT: NETWORK_CONFIG.maxRegularMint,
+  MAX_CUSTOM_MINT: NETWORK_CONFIG.maxCustomMint,
+} as const;
+
+/**
+ * Phrase Input Configuration
+ * Matches contract logic - empty phrases allowed, will be auto-filled
+ * Note: Curly brackets {} are added automatically, users just type plain text
+ */
+export const PHRASE_CONFIG = {
+  MIN_LENGTH: 0, // Empty allowed (auto-filled with random)
+  MAX_LENGTH: 64,
+  MIN_CUSTOM_COUNT: 1, // At least 1 non-empty required
+  TOTAL_COUNT: 3,
+  PLACEHOLDER: [
+    "e.g., based, freedom, onchain",
+    "e.g., you, me, all of us",
+    "e.g., vibes, spirit, culture",
+  ],
+} as const;
+
+/**
+ * WalletConnect Configuration
+ */
+export const WALLETCONNECT_PROJECT_ID =
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
+  process.env.WALLETCONNECT_PROJECT_ID ||
+  "";
+
+if (!WALLETCONNECT_PROJECT_ID) {
+  console.warn(
+    "⚠️ WalletConnect Project ID not found. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID or WALLETCONNECT_PROJECT_ID in .env.local"
+  );
+}
+
+/**
+ * App Configuration
+ */
+export const APP_CONFIG = {
+  NAME: "WHAT IS BASE FOR?",
+  DESCRIPTION: "A fully onchain collection of base spirits",
+  AUDIO_PATH: "/assets/What is Base for.mp3",
+  TOKEN_DISPLAY_ID: 0, // Which token ID to display in hero
+} as const;
+
+/**
+ * RainbowKit Theme Configuration
+ */
+export const RAINBOWKIT_CONFIG = {
+  appName: APP_CONFIG.NAME,
+  projectId: WALLETCONNECT_PROJECT_ID,
+  theme: "dark" as const,
+} as const;
+
+/**
+ * UI Messages
+ */
+export const MESSAGES = {
+  CONNECT_WALLET: "Please connect your wallet to mint",
+  INVALID_PHRASES: "At least one phrase required (max 64 characters each). Empty phrases will use random text.",
+  MINTING: "Minting...",
+  MINT_SUCCESS: "Successfully minted!",
+  MINT_ERROR: "Minting failed. Please try again.",
+  TRANSACTION_PENDING: "Waiting for transaction confirmation...",
+} as const;

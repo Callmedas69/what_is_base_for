@@ -1,0 +1,31 @@
+"use client";
+
+/**
+ * Client-side Providers
+ * Wraps the app with Wagmi and RainbowKit providers
+ */
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider } from "wagmi";
+import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
+import { wagmiConfig } from "./wagmi";
+import "@rainbow-me/rainbowkit/styles.css";
+
+const queryClient = new QueryClient();
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          theme={lightTheme({
+            accentColor: "#0000ff",
+            borderRadius: "medium",
+          })}
+        >
+          {children}
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
