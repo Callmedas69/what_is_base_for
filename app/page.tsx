@@ -13,9 +13,38 @@ import { BASEFOR_ABI } from "@/abi/Basefor.abi";
 import { CONTRACTS, MESSAGES } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import { Header } from "@/components/Header";
+import { AudioVisualizer } from "@/components/AudioVisualizer";
 import { TokenDisplay } from "@/components/TokenDisplay";
 import { MintSection } from "@/components/MintSection";
 import { SuccessModal } from "@/components/SuccessModal";
+import { FloatingDock } from "@/components/ui/floating-dock";
+import { ProfileBadge } from "@/components/ProfileBadge";
+
+const SHARE_TEXT = "What is Base means for you?";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+const DOCK_ITEMS = [
+  {
+    title: "OpenSea",
+    icon: <Image src="/opensea_logo.svg" alt="OpenSea" width={24} height={24} className="h-full w-full" />,
+    href: `https://opensea.io/assets/base/${CONTRACTS.BASEFOR}`,
+  },
+  {
+    title: "OnChainChecker",
+    icon: <Image src="/onchainchecker_logo.svg" alt="OnChainChecker" width={24} height={24} className="h-full w-full" />,
+    href: `https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}`,
+  },
+  {
+    title: "Share on Farcaster",
+    icon: <Image src="/farcster_new_logo.svg" alt="Share on Farcaster" width={24} height={24} className="h-full w-full" />,
+    href: `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`,
+  },
+  {
+    title: "Share on X",
+    icon: <Image src="/twitter_logo.svg" alt="Share on X" width={24} height={24} className="h-full w-full" />,
+    href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`,
+  },
+];
 
 export default function Home() {
   const { isConnected, address } = useAccount();
@@ -252,144 +281,42 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-white text-[#0a0b0d]">
       <Header />
 
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-4 md:px-6 md:py-6">
+      {/* Audio visualizer container - allows overlap with main */}
+      <div className="relative h-[25vh]">
+        <AudioVisualizer />
+      </div>
+
+      <main className="relative flex flex-1 flex-col items-center justify-center px-4 py-4 md:px-6 md:py-6 -mt-[25vh]">
         <div className="w-full max-w-7xl">
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex flex-col lg:flex-row gap-8 items-center">
             {/* Left: Preview */}
             <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-end space-y-3">
               <TokenDisplay />
 
-              {/* Info & Share Links */}
-              <div className="w-full max-w-md flex flex-wrap items-center gap-3 text-sm md:text-xs text-[#5b616e] justify-center">
-                {/* OpenSea */}
-                <a
-                  href={`https://opensea.io/assets/base/${CONTRACTS.BASEFOR}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-opacity hover:opacity-70"
-                  title="View on OpenSea"
-                >
-                  <Image
-                    src="/opensea_logo.svg"
-                    alt="OpenSea"
-                    width={20}
-                    height={20}
-                    className="h-5 w-5"
-                  />
-                </a>
-
-                {/* OnChainChecker */}
-                <a
-                  href={`https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-opacity hover:opacity-70"
-                  title="Verify on OnChainChecker"
-                >
-                  <Image
-                    src="/onchainchecker_logo.svg"
-                    alt="OnChainChecker"
-                    width={20}
-                    height={20}
-                    className="h-5 w-5"
-                  />
-                </a>
-
-                <span>|</span>
-
-                {/* Share Buttons */}
-                <a
-                  href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
-                    "Check out What is Base for? - A fully onchain collection of base spirits 🔵"
-                  )}&embeds[]=${encodeURIComponent(
-                    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-6 w-6 items-center justify-center rounded bg-[#855DCD] transition-opacity hover:opacity-80"
-                  title="Share on Farcaster"
-                >
-                  <Image
-                    src="/farcster_new_logo.svg"
-                    alt="Share on Farcaster"
-                    width={14}
-                    height={14}
-                    className="h-3.5 w-3.5 brightness-0 invert"
-                  />
-                </a>
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                    "Check out What is Base for? - A fully onchain collection of base spirits 🔵"
-                  )}&url=${encodeURIComponent(
-                    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-6 w-6 items-center justify-center rounded bg-black transition-opacity hover:opacity-80"
-                  title="Share on X"
-                >
-                  <Image
-                    src="/twitter_logo.svg"
-                    alt="Share on X"
-                    width={14}
-                    height={14}
-                    className="h-3.5 w-3.5 brightness-0 invert"
-                  />
-                </a>
-
-                <span>|</span>
-
-                {/* Creator */}
-                <span className="text-[#0a0b0d]/80 italic">0xdasx</span>
-                <a
-                  href="https://warpcast.com/0xd"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-opacity hover:opacity-70"
-                  title="Creator Farcaster"
-                >
-                  <Image
-                    src="/farcster_new_logo.svg"
-                    alt="Farcaster"
-                    width={14}
-                    height={14}
-                    className="h-3.5 w-3.5"
-                  />
-                </a>
-                <a
-                  href="https://x.com/0xdasx"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-opacity hover:opacity-70"
-                  title="Creator X"
-                >
-                  <Image
-                    src="/twitter_logo.svg"
-                    alt="X"
-                    width={14}
-                    height={14}
-                    className="h-3.5 w-3.5"
-                  />
-                </a>
+              {/* Floating Dock */}
+              <div className="w-full max-w-md flex justify-center">
+                <FloatingDock items={DOCK_ITEMS} />
               </div>
             </div>
 
             {/* Right: Mint Section */}
-            <div className="w-full lg:w-1/2 space-y-6">
-              <MintSection
-                isConnected={isConnected}
-                isProcessing={isProcessing}
-                mintType={mintType}
-                phrases={phrases}
-                alreadyMintedRegular={alreadyMintedRegular}
-                remainingCustomMints={remainingCustomMints}
-                isPaused={isPaused}
-                isSoldOut={isSoldOut}
-                walletAddress={address}
-                onPhrasesChange={setPhrases}
-                onRegularMint={handleRegularMint}
-                onCustomMint={handleCustomMint}
-              />
+            <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start">
+              <div className="w-full max-w-md space-y-6">
+                <MintSection
+                  isConnected={isConnected}
+                  isProcessing={isProcessing}
+                  mintType={mintType}
+                  phrases={phrases}
+                  alreadyMintedRegular={alreadyMintedRegular}
+                  remainingCustomMints={remainingCustomMints}
+                  isPaused={isPaused}
+                  isSoldOut={isSoldOut}
+                  walletAddress={address}
+                  onPhrasesChange={setPhrases}
+                  onRegularMint={handleRegularMint}
+                  onCustomMint={handleCustomMint}
+                />
+              </div>
             </div>
           </div>
 
@@ -405,6 +332,8 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      <ProfileBadge />
     </div>
   );
 }

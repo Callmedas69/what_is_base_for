@@ -154,7 +154,7 @@
 }
 
 .wallet-button-container button:hover {
-  background: var(--base-gray-15) !important;
+  background: var(--base-gray-0) !important;
 }
 
 /* Override purple text and icons inside WalletButton */
@@ -163,7 +163,15 @@
   color: var(--base-gray-100) !important;
 }
 
-/* OnchainConnect Modal styling - white background, black text */
+/* OnchainConnect Modal - ensure it's above everything */
+[data-privy-dialog],
+[data-radix-portal],
+[data-privy-dialog]>div,
+[data-radix-portal]>div {
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
 [data-privy-dialog],
 [data-radix-portal],
 div[class*="bg-black/90"],
@@ -206,7 +214,7 @@ div[class*="bg-black/90"] button {
 
 div[class*="border-purple"] button:hover,
 div[class*="bg-black/90"] button:hover {
-  background: var(--base-gray-10) !important;
+  background: var(--base-gray-0) !important;
 }
 
 /* Modal button icons and text */

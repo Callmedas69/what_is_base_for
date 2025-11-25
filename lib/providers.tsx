@@ -9,6 +9,7 @@
 import { OnchainConnect } from "@onchainfi/connect";
 import { base, baseSepolia } from "wagmi/chains";
 import { CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
+import { AudioProvider } from "@/hooks/useAudio";
 
 // Map chainId to wagmi chain object
 const CHAIN_MAP = {
@@ -32,7 +33,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         showWalletLoginFirst: true,
       }}
     >
-      {children}
+      <AudioProvider>
+        {children}
+      </AudioProvider>
     </OnchainConnect>
   );
 }
