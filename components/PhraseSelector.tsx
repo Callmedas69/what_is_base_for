@@ -19,9 +19,7 @@ export function PhraseSelector({ selected, onSelect, disabled = false }: PhraseS
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-[#0a0b0d]">
-        How many phrases do you want to mint?
-      </p>
+      
       <div className="grid grid-cols-3 gap-2">
         {options.map((count) => {
           const config = PAYMENT_CONFIG.PRICING_DISPLAY[count];
@@ -53,7 +51,7 @@ export function PhraseSelector({ selected, onSelect, disabled = false }: PhraseS
               </div>
 
               {/* Price */}
-              <div className="text-xs text-[#5b616e] mt-1 font-mono">
+              <div className="text-xs text-[#5b616e] mt-1">
                 {config.price} USDC
               </div>
 
@@ -65,11 +63,6 @@ export function PhraseSelector({ selected, onSelect, disabled = false }: PhraseS
           );
         })}
       </div>
-
-      {/* Pricing Info */}
-      <p className="text-xs text-[#5b616e] text-center italic">
-        💡 3 phrases = Best value! Save 50% compared to 1 phrase each
-      </p>
     </div>
   );
 }

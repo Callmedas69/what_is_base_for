@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { useOnchainPay } from '@onchainfi/connect';
-import { PAYMENT_CONFIG } from '@/lib/config';
+import { PAYMENT_CONFIG, CURRENT_NETWORK } from '@/lib/config';
+
+// Map config network names to API network names
+const NETWORK_API_NAMES: Record<string, string> = {
+  baseSepolia: 'base-sepolia',
+  base: 'base',
+} as const;
 import type {
   UseX402PaymentResult,
   PhraseCount,
@@ -52,15 +58,24 @@ export function useX402Payment(): UseX402PaymentResult {
         hasFarcasterContext: !!farcasterContext?.fid,
       });
 
+      // Get API network name (e.g., "base-sepolia" instead of "baseSepolia")
+      const networkName = NETWORK_API_NAMES[CURRENT_NETWORK] || 'base';
+
       // Step 1: Use OnchainConnect SDK to verify payment
       // This prompts user to sign EIP-712 message and generates payment header
       const verifyResult = await verify({
         to: PAYMENT_CONFIG.RECIPIENT,
         amount,
+        network: networkName,
+        sourceNetwork: networkName,
+        destinationNetwork: networkName,
       });
 
+      console.log('[useX402Payment] SDK verify result:', verifyResult);
+
       if (!verifyResult.success) {
-        throw new Error('Payment verification failed');
+        console.error('[useX402Payment] Verify failed:', verifyResult.error || verifyResult);
+        throw new Error(verifyResult.error || 'Payment verification failed');
       }
 
       // The SDK returns an x402 header after user signs

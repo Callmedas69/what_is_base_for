@@ -129,6 +129,6 @@ export const PAYMENT_CONFIG = {
     3: { price: '0.30', label: '3 phrases', badge: 'Best Value!' },
   } as const,
   TOKEN: 'USDC' as const,
-  NETWORK: 'base' as const,
+  NETWORK: CURRENT_NETWORK,
   RECIPIENT: process.env.NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS || '',
 } as const;

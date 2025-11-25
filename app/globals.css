@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Include @onchainfi/connect styles */
+@source "../node_modules/@onchainfi/connect/dist";
+
 /* Custom Fonts */
 @font-face {
   font-family: "Base Sans";
@@ -117,6 +120,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -131,4 +135,109 @@
   iframe::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* WalletButton inner pill styling - override hardcoded styles */
+.wallet-button-container button {
+  all: unset !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  background: var(--base-gray-0) !important;
+  border: 1px solid var(--base-gray-100) !important;
+  border-radius: 9999px !important;
+  padding: 0.5rem 1rem !important;
+  cursor: pointer !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s !important;
+}
+
+.wallet-button-container button:hover {
+  background: var(--base-gray-15) !important;
+}
+
+/* Override purple text and icons inside WalletButton */
+.wallet-button-container button span,
+.wallet-button-container button svg {
+  color: var(--base-gray-100) !important;
+}
+
+/* OnchainConnect Modal styling - white background, black text */
+[data-privy-dialog],
+[data-radix-portal],
+div[class*="bg-black/90"],
+div[class*="bg-black/80"] {
+  background: transparent !important;
+}
+
+/* Modal container */
+div[class*="border-purple"][class*="rounded-2xl"],
+div[class*="bg-black/90"][class*="rounded-2xl"] {
+  background: var(--base-gray-0) !important;
+  border-color: var(--base-gray-15) !important;
+}
+
+/* Modal headings */
+h2[class*="text-transparent"],
+h2[class*="bg-gradient-to-r"] {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: var(--base-gray-100) !important;
+  color: var(--base-gray-100) !important;
+}
+
+/* Modal text */
+div[class*="border-purple"] p,
+div[class*="border-purple"] span,
+div[class*="bg-black/90"] p,
+div[class*="bg-black/90"] span {
+  color: var(--base-gray-100) !important;
+}
+
+/* Modal buttons - white background, gray border */
+div[class*="border-purple"] button,
+div[class*="bg-black/90"] button {
+  background: var(--base-gray-0) !important;
+  border-color: var(--base-gray-15) !important;
+  color: var(--base-gray-100) !important;
+}
+
+div[class*="border-purple"] button:hover,
+div[class*="bg-black/90"] button:hover {
+  background: var(--base-gray-10) !important;
+}
+
+/* Modal button icons and text */
+div[class*="border-purple"] button svg,
+div[class*="border-purple"] button span,
+div[class*="bg-black/90"] button svg,
+div[class*="bg-black/90"] button span {
+  color: var(--base-gray-100) !important;
+}
+
+/* Remove ALL purple colors globally */
+[class*="text-purple"],
+[class*="border-purple"],
+[class*="bg-purple"] {
+  color: var(--base-gray-100) !important;
+  border-color: var(--base-gray-15) !important;
+  background-color: var(--base-gray-0) !important;
+}
+
+/* Purple icons */
+svg[class*="text-purple"] {
+  color: var(--base-gray-100) !important;
+}
+
+/* Yellow/warning section */
+div[class*="bg-yellow"],
+div[class*="border-yellow"] {
+  background-color: var(--base-gray-10) !important;
+  border-color: var(--base-gray-15) !important;
+}
+
+[class*="text-yellow"] {
+  color: var(--base-gray-60) !important;
 }

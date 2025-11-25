@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PHRASE_CONFIG, MESSAGES, PAYMENT_CONFIG } from "@/lib/config";
 import { PhraseSelector } from "./PhraseSelector";
 import { useX402Payment } from "@/hooks/useX402Payment";
-import { useFarcasterContext } from "@/hooks/useFarcasterContext";
 import type { PhraseCount } from "@/types/x402";
 
 interface CustomMintProps {
@@ -32,8 +31,13 @@ export function CustomMint({
 }: CustomMintProps) {
   const [phraseCount, setPhraseCount] = useState<PhraseCount>(3);
 
+  // Prevent hydration mismatch - treat as not connected on server
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const clientConnected = mounted && isConnected;
+
   const { verifyPayment, isVerifying } = useX402Payment();
-  const farcasterContext = useFarcasterContext();
 
   const handlePhraseChange = (index: number, value: string) => {
     const newPhrases = [...phrases];
@@ -42,7 +46,7 @@ export function CustomMint({
   };
 
   const handlePayAndMint = async () => {
-    if (!isConnected || !walletAddress) {
+    if (!clientConnected || !walletAddress) {
       alert(MESSAGES.CONNECT_WALLET);
       return;
     }
@@ -83,8 +87,7 @@ export function CustomMint({
       const paymentData = await verifyPayment(
         phraseCount,
         activePhrases,
-        walletAddress,
-        farcasterContext
+        walletAddress
       );
 
       // Trigger mint with payment data
@@ -100,21 +103,17 @@ export function CustomMint({
   };
 
   const currentPrice = PAYMENT_CONFIG.PRICES[phraseCount];
-  const isDisabled = !isConnected || isProcessing || isVerifying || isPaused || isSoldOut;
+  const isDisabled = !clientConnected || isProcessing || isVerifying || isPaused || isSoldOut;
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
         <h3 className="text-lg font-semibold uppercase text-[#0a0b0d]">
-          Custom Mint (Paid)
+          CUSTOM MINT
         </h3>
-        <p className="text-sm text-[#5b616e] italic">
-          {isPaused
-            ? "⚠️ Minting is paused"
-            : isSoldOut
-            ? "⚠️ Sold out"
-            : `Create your own NFT with custom phrases • Pay with USDC`}
+        <p className="text-sm md:text-xs text-[#5b616e] italic">
+          your phrases • {currentPrice} USDC
         </p>
       </div>
 
@@ -145,31 +144,13 @@ export function CustomMint({
         ))}
       </div>
 
-      {/* Character Counter for Active Inputs */}
-      <div className="flex justify-between text-xs text-[#5b616e]">
-        {[0, 1, 2].slice(0, phraseCount).map((index) => (
-          <div key={index}>
-            Phrase {index + 1}: {phrases[index]?.length || 0}/{PHRASE_CONFIG.MAX_LENGTH}
-          </div>
-        ))}
-      </div>
-
-      {/* Farcaster Badge (if applicable) */}
-      {farcasterContext.isFarcaster && farcasterContext.username && (
-        <div className="flex items-center gap-2 rounded-lg bg-[#855DCD]/5 px-3 py-2 border border-[#855DCD]/20">
-          <span className="text-xs font-medium text-[#855DCD]">
-            🎭 Minting as @{farcasterContext.username}
-          </span>
-        </div>
-      )}
-
       {/* Pay & Mint Button */}
       <button
         onClick={handlePayAndMint}
         disabled={isDisabled}
         className="w-full rounded-lg bg-[#0000ff] px-6 py-3.5 md:py-3 font-medium text-white transition-all hover:bg-[#3c8aff] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
       >
-        {!isConnected
+        {!clientConnected
           ? "Connect Wallet"
           : isVerifying
           ? MESSAGES.PAYMENT_VERIFYING
@@ -182,18 +163,6 @@ export function CustomMint({
           : `Pay ${currentPrice} USDC & Mint`}
       </button>
 
-      {/* Payment Info */}
-      {isConnected && !isPaused && !isSoldOut && (
-        <div className="rounded-lg bg-[#eef0f3] px-4 py-3 text-xs text-[#5b616e] space-y-1">
-          <p className="font-medium text-[#0a0b0d]">💳 Payment Details:</p>
-          <p>• Amount: {currentPrice} USDC</p>
-          <p>• Network: Base</p>
-          <p>• Token: USDC (stablecoin)</p>
-          <p className="text-[10px] mt-2 italic">
-            Payment is processed securely via x402 protocol
-          </p>
-        </div>
-      )}
     </div>
   );
 }

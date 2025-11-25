@@ -1,10 +1,32 @@
 "use client";
 
-import { useRef } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useRef, useState, useEffect } from "react";
+import { WalletButton } from "@onchainfi/connect";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { APP_CONFIG } from "@/lib/config";
+
+// Full color spectrum palette (40 colors spanning the rainbow)
+const COLORS = [
+  "#0000ff", "#0033ff", "#0066ff", "#0099ff", "#00ccff",
+  "#00ffff", "#00ffcc", "#00ff99", "#00ff66", "#00ff33",
+  "#00ff00", "#33ff00", "#66ff00", "#99ff00", "#ccff00",
+  "#ffff00", "#ffcc00", "#ff9900", "#ff6600", "#ff3300",
+  "#ff0000", "#ff0033", "#ff0066", "#ff0099", "#ff00cc",
+  "#ff00ff", "#cc00ff", "#9900ff", "#6600ff", "#3300ff",
+  "#0000ff", "#3333ff", "#6666ff", "#9999ff", "#ccccff",
+  "#cc99ff", "#9966ff", "#6633ff", "#3300cc", "#0000cc",
+];
+
+const BAR_COUNT = 40;
+
+// Generate bars array outside component
+const BARS = Array.from({ length: BAR_COUNT }, (_, i) => ({
+  id: i,
+  color: COLORS[i % COLORS.length],
+  duration: 0.4 + Math.random() * 0.6,
+  delay: Math.random() * 0.3,
+}));
 
 // Full color spectrum with hard stops (40 colors, 2.5% each)
 const HARD_STOP_GRADIENT = `linear-gradient(
@@ -26,19 +48,79 @@ export function Header() {
   const animationRef = useRef<gsap.core.Tween | null>(null);
   const contextRef = useRef<gsap.Context | null>(null);
 
-  // Set up GSAP context using useGSAP hook
-  useGSAP(() => {
-    contextRef.current = gsap.context(() => {
-      // Context is ready for animations
-    });
+  // Audio state
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const barsRef = useRef<HTMLDivElement[]>([]);
+  const barAnimationsRef = useRef<gsap.core.Tween[]>([]);
 
+  // Auto-play audio on mount
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {
+        setIsPlaying(false);
+      });
+    }
+  }, []);
+
+  // Set up GSAP context for logo animation
+  useGSAP(() => {
+    contextRef.current = gsap.context(() => {});
     return () => {
-      // Cleanup on unmount
       if (animationRef.current) {
         animationRef.current.kill();
       }
     };
   }, []);
+
+  // Animate spectrum bars after mount
+  useEffect(() => {
+    // Clear previous animations
+    barAnimationsRef.current.forEach((anim) => anim.kill());
+    barAnimationsRef.current = [];
+
+    // Create new animations
+    barsRef.current.forEach((bar, index) => {
+      if (bar) {
+        const barData = BARS[index];
+        const animation = gsap.to(bar, {
+          height: "90%",
+          duration: barData.duration,
+          ease: "power1.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: barData.delay,
+        });
+        barAnimationsRef.current.push(animation);
+      }
+    });
+
+    return () => {
+      barAnimationsRef.current.forEach((anim) => anim.kill());
+    };
+  }, []);
+
+  // Control bar animations based on playing state
+  useEffect(() => {
+    barAnimationsRef.current.forEach((animation) => {
+      if (isPlaying) {
+        animation.play();
+      } else {
+        animation.pause();
+      }
+    });
+  }, [isPlaying]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   const handleMouseEnter = () => {
     if (logoRef.current) {
@@ -80,21 +162,52 @@ export function Header() {
   };
 
   return (
-    <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-[#dee1e7] bg-white px-4 sm:px-6 py-4">
-      <div className="flex flex-col gap-1">
-        <h1
-          ref={logoRef}
-          className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a0b0d] tracking-tight cursor-pointer"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          {APP_CONFIG.NAME}
-        </h1>
-        <p className="hidden sm:block text-base lg:text-lg text-[#5b616e] font-mono font-extrabold uppercase leading-tight">
-          turns words into identity, and phrases into home
-        </p>
+    <>
+      <audio ref={audioRef} loop>
+        <source src={APP_CONFIG.AUDIO_PATH} type="audio/mpeg" />
+      </audio>
+
+      {/* Top Audio Visualizer - bars grow downward from top */}
+      <div
+        className="w-full h-8 flex items-start justify-center gap-0.5 cursor-pointer bg-white"
+        onClick={togglePlay}
+      >
+        {BARS.map((bar, index) => (
+          <div
+            key={bar.id}
+            ref={(el) => {
+              if (el) barsRef.current[index] = el;
+            }}
+            className={`flex-1 transition-opacity ${
+              isPlaying ? "opacity-100" : "opacity-30"
+            } ${index % 2 === 0 ? "" : "hidden md:block"}`}
+            style={{
+              backgroundColor: bar.color,
+              height: "20%",
+            }}
+          />
+        ))}
       </div>
-      <ConnectButton />
-    </header>
+
+      <header className="flex flex-row items-center justify-between gap-4 border-b border-[#dee1e7] bg-white px-4 sm:px-6 py-4">
+        <div className="flex flex-col gap-1">
+          <h1
+            ref={logoRef}
+            className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0a0b0d] tracking-tight cursor-pointer"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {APP_CONFIG.NAME}
+          </h1>
+          <p className="hidden sm:block text-base lg:text-sm text-[#5b616e] font-mono font-extrabold uppercase leading-tight">
+            turns words into identity, and phrases into home
+          </p>
+        </div>
+
+        <div className="wallet-button-container">
+          <WalletButton position="inline" />
+        </div>
+      </header>
+    </>
   );
 }

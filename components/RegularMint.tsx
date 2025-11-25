@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { MESSAGES } from "@/lib/config";
 
 interface RegularMintProps {
@@ -21,24 +22,23 @@ export function RegularMint({
   isSoldOut,
   onMint,
 }: RegularMintProps) {
-  const getStatusMessage = () => {
-    if (isPaused) return "Minting is paused";
-    if (isSoldOut) return "Sold out";
-    if (alreadyMinted) return "Already minted (1/1)";
-    return "Mint with predefined phrases (Max 1 per wallet)";
-  };
+  // Prevent hydration mismatch - treat as not connected on server
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const clientConnected = mounted && isConnected;
 
   const isDisabled =
-    !isConnected || isProcessing || alreadyMinted || isPaused || isSoldOut;
+    !clientConnected || isProcessing || alreadyMinted || isPaused || isSoldOut;
 
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
         <h3 className="text-lg font-semibold text-[#0a0b0d] uppercase">
-          Regular Mint
+          FREE MINT
         </h3>
         <p className="italic text-sm md:text-xs text-[#5b616e]">
-          1 Free mint pre-define base&apos;s phrases
+          1 pre-defined base&apos;s phrases
         </p>
       </div>
       <button
@@ -46,7 +46,7 @@ export function RegularMint({
         disabled={isDisabled}
         className="w-full rounded-lg bg-[#0000ff] px-6 py-3.5 md:py-3 font-medium text-white transition-colors hover:bg-[#3c8aff] disabled:cursor-not-allowed disabled:opacity-30"
       >
-        {!isConnected
+        {!clientConnected
           ? "Connect Wallet"
           : isMinting
           ? MESSAGES.MINTING
@@ -56,7 +56,7 @@ export function RegularMint({
           ? "Paused"
           : isSoldOut
           ? "Sold Out"
-          : "Mint Regular"}
+          : "Free Mint"}
       </button>
     </div>
   );

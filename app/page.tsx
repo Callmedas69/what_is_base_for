@@ -9,11 +9,10 @@ import {
   useReadContract,
 } from "wagmi";
 import { parseEventLogs } from "viem";
-import { BASEFOR_ABI, areValidPhrases } from "@/abi/Basefor.abi";
-import { CONTRACTS, MESSAGES, CHAIN_CONFIG } from "@/lib/config";
+import { BASEFOR_ABI } from "@/abi/Basefor.abi";
+import { CONTRACTS, MESSAGES } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import { Header } from "@/components/Header";
-import { AudioPlayer } from "@/components/AudioPlayer";
 import { TokenDisplay } from "@/components/TokenDisplay";
 import { MintSection } from "@/components/MintSection";
 import { SuccessModal } from "@/components/SuccessModal";
@@ -251,72 +250,103 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-[#0a0b0d]">
-      <AudioPlayer />
       <Header />
 
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-8 md:px-6 md:py-12">
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-4 md:px-6 md:py-6">
         <div className="w-full max-w-7xl">
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             {/* Left: Preview */}
             <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-end space-y-3">
               <TokenDisplay />
 
-              {/* Collection & Creator Info - Single Line */}
-              <div className="w-full max-w-md flex items-center gap-2 text-sm md:text-xs text-[#5b616e] flex-wrap justify-center">
+              {/* Info & Share Links */}
+              <div className="w-full max-w-md flex flex-wrap items-center gap-3 text-sm md:text-xs text-[#5b616e] justify-center">
+                {/* OpenSea */}
                 <a
-                  href={`${CHAIN_CONFIG.BASESCAN}/address/${CONTRACTS.BASEFOR}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#0a0b0d] hover:text-[#0000ff] underline"
-                >
-                  basescan
-                </a>
-
-                {/* TODO: Replace with actual OpenSea collection URL */}
-                <a
-                  href="#"
+                  href={`https://opensea.io/assets/base/${CONTRACTS.BASEFOR}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition-opacity hover:opacity-70"
-                  title="OpenSea Collection"
+                  title="View on OpenSea"
                 >
                   <Image
                     src="/opensea_logo.svg"
                     alt="OpenSea"
-                    width={16}
-                    height={16}
-                    className="h-4 w-4"
+                    width={20}
+                    height={20}
+                    className="h-5 w-5"
                   />
                 </a>
 
-                {/* TODO: Replace with actual OnChainChecker URL */}
+                {/* OnChainChecker */}
                 <a
-                  href="#"
+                  href={`https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition-opacity hover:opacity-70"
-                  title="OnChainChecker"
+                  title="Verify on OnChainChecker"
                 >
                   <Image
                     src="/onchainchecker_logo.svg"
                     alt="OnChainChecker"
-                    width={16}
-                    height={16}
-                    className="h-4 w-4"
+                    width={20}
+                    height={20}
+                    className="h-5 w-5"
                   />
                 </a>
 
                 <span>|</span>
 
-                <span>build by</span>
-                <span className="text-[#0a0b0d]/80 italic">0xdasx</span>
+                {/* Share Buttons */}
+                <a
+                  href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
+                    "Check out What is Base for? - A fully onchain collection of base spirits 🔵"
+                  )}&embeds[]=${encodeURIComponent(
+                    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 w-6 items-center justify-center rounded bg-[#855DCD] transition-opacity hover:opacity-80"
+                  title="Share on Farcaster"
+                >
+                  <Image
+                    src="/farcster_new_logo.svg"
+                    alt="Share on Farcaster"
+                    width={14}
+                    height={14}
+                    className="h-3.5 w-3.5 brightness-0 invert"
+                  />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    "Check out What is Base for? - A fully onchain collection of base spirits 🔵"
+                  )}&url=${encodeURIComponent(
+                    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 w-6 items-center justify-center rounded bg-black transition-opacity hover:opacity-80"
+                  title="Share on X"
+                >
+                  <Image
+                    src="/twitter_logo.svg"
+                    alt="Share on X"
+                    width={14}
+                    height={14}
+                    className="h-3.5 w-3.5 brightness-0 invert"
+                  />
+                </a>
 
+                <span>|</span>
+
+                {/* Creator */}
+                <span className="text-[#0a0b0d]/80 italic">0xdasx</span>
                 <a
                   href="https://warpcast.com/0xd"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition-opacity hover:opacity-70"
-                  title="Farcaster"
+                  title="Creator Farcaster"
                 >
                   <Image
                     src="/farcster_new_logo.svg"
@@ -326,13 +356,12 @@ export default function Home() {
                     className="h-3.5 w-3.5"
                   />
                 </a>
-
                 <a
                   href="https://x.com/0xdasx"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition-opacity hover:opacity-70"
-                  title="X (Twitter)"
+                  title="Creator X"
                 >
                   <Image
                     src="/twitter_logo.svg"
@@ -347,50 +376,6 @@ export default function Home() {
 
             {/* Right: Mint Section */}
             <div className="w-full lg:w-1/2 space-y-6">
-              {/* Social Share Buttons */}
-              <div className="flex justify-center lg:justify-start">
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
-                      "Check out What is Base for? - A fully onchain collection of base spirits 🔵"
-                    )}&embeds[]=${encodeURIComponent(
-                      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#855DCD] transition-opacity hover:opacity-80"
-                    title="Share on Farcaster"
-                  >
-                    <Image
-                      src="/farcster_new_logo.svg"
-                      alt="Farcaster"
-                      width={20}
-                      height={20}
-                      className="h-5 w-5 brightness-0 invert"
-                    />
-                  </a>
-                  <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                      "Check out What is Base for? - A fully onchain collection of base spirits 🔵"
-                    )}&url=${encodeURIComponent(
-                      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-black transition-opacity hover:opacity-80"
-                    title="Share on X"
-                  >
-                    <Image
-                      src="/twitter_logo.svg"
-                      alt="X"
-                      width={20}
-                      height={20}
-                      className="h-5 w-5 brightness-0 invert"
-                    />
-                  </a>
-                </div>
-              </div>
-
               <MintSection
                 isConnected={isConnected}
                 isProcessing={isProcessing}

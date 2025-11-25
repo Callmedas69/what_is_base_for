@@ -31,10 +31,10 @@ export function SuccessModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md border-[#dee1e7] bg-white max-h-[90vh] overflow-y-auto">
-        <div className="space-y-4 sm:space-y-6">
+      <DialogContent className="max-w-sm border-[#dee1e7] bg-white p-4">
+        <div className="space-y-3">
           {/* NFT Preview */}
-          <div className="aspect-square w-full overflow-hidden rounded-lg border-2 border-[#dee1e7] bg-[#eef0f3]">
+          <div className="aspect-square w-40 mx-auto overflow-hidden rounded-lg border border-[#dee1e7] bg-[#eef0f3]">
             {animationUrl ? (
               <iframe
                 src={animationUrl}
@@ -42,72 +42,59 @@ export function SuccessModal({
                 title={`NFT #${tokenIdString}`}
                 sandbox="allow-scripts allow-same-origin"
                 scrolling="no"
-                style={{
-                  border: "none",
-                  overflow: "hidden",
-                }}
+                style={{ border: "none", overflow: "hidden" }}
               />
             ) : (
-              <div className="flex h-full items-center justify-center p-8 text-center">
-                <div className="space-y-4">
-                  <p className="text-4xl sm:text-6xl font-bold text-[#0000ff]">
-                    #{tokenIdString}
-                  </p>
-                  <p className="text-sm text-[#5b616e]">
-                    On-chain animated NFT
-                  </p>
-                </div>
+              <div className="flex h-full items-center justify-center text-center">
+                <p className="text-3xl font-bold text-[#0000ff]">
+                  #{tokenIdString}
+                </p>
               </div>
             )}
           </div>
 
           {/* Token Info */}
-          <div className="space-y-2 text-center flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex justify-between items-center">
             <Image
               src="/Base_basemark_blue.svg"
               alt="Base"
-              width={100}
-              height={32}
-              className="h-6"
+              width={80}
+              height={24}
+              className="h-5"
             />
             <a
               href={`${CHAIN_CONFIG.BASESCAN}/tx/${hash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[#0000ff] underline hover:text-[#3c8aff]"
+              className="text-xs text-[#0000ff] underline hover:text-[#3c8aff]"
             >
               View Transaction
             </a>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
-            {/* OpenSea Button */}
+          <div className="flex items-center justify-center gap-2">
             <a
               href={openSeaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-lg bg-[#2081e2] px-4 py-3 sm:py-2.5 transition-colors hover:bg-[#2081e2]/85"
+              className="flex items-center gap-2 rounded-lg bg-[#2081e2] px-3 py-2 transition-colors hover:bg-[#2081e2]/85"
               title="View on OpenSea"
             >
               <Image
                 src="/opensea_logo.svg"
                 alt="OpenSea"
-                width={20}
-                height={20}
-                className="h-5 w-5"
+                width={16}
+                height={16}
+                className="h-4 w-4"
               />
-              <span className="text-sm font-medium text-white">
-                View on OpenSea
-              </span>
+              <span className="text-xs font-medium text-white">OpenSea</span>
             </a>
-
-            {/* Share Buttons */}
             <ShareButtons
               text={shareText}
               url={nftUrl}
               imageUrl={animationUrl}
-              size="md"
+              size="sm"
             />
           </div>
         </div>

@@ -13,12 +13,19 @@ export function TokenDisplay() {
   const [html, setHtml] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
 
-  const { data: tokenURI } = useReadContract({
+  const { data: tokenURI, error, isLoading } = useReadContract({
     address: CONTRACTS.BASEFOR,
     abi: BASEFOR_ABI,
     functionName: "tokenURI",
     args: [BigInt(APP_CONFIG.TOKEN_DISPLAY_ID)],
   });
+
+  // Log errors for debugging
+  useEffect(() => {
+    if (error) {
+      console.log('[TokenDisplay] Token #0 not found - this is expected if no tokens have been minted yet');
+    }
+  }, [error]);
 
   // Parse tokenURI and decode base64 HTML
   useEffect(() => {
@@ -89,7 +96,18 @@ export function TokenDisplay() {
               <p className="text-6xl font-bold text-[#0000ff]">
                 #{APP_CONFIG.TOKEN_DISPLAY_ID}
               </p>
-              <p className="text-sm text-[#5b616e]">Loading animation...</p>
+              {isLoading ? (
+                <p className="text-sm text-[#5b616e]">Loading animation...</p>
+              ) : error ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-[#5b616e]">Token not minted yet</p>
+                  <p className="text-xs text-[#8b91a0]">
+                    Mint your first NFT to see it here!
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-[#5b616e]">Loading animation...</p>
+              )}
             </div>
           </div>
         )}

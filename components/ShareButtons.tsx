@@ -5,7 +5,7 @@ interface ShareButtonsProps {
   url: string;
   imageUrl?: string;
   className?: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 }
 
 export function ShareButtons({
@@ -43,14 +43,14 @@ export function ShareButtons({
   };
 
   const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
-  const buttonSize = size === "sm" ? "p-2" : "p-2.5";
+  const buttonSize = size === "lg" ? "h-10 w-10" : size === "sm" ? "p-2" : "p-2.5";
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       {/* Twitter Share Button */}
       <button
         onClick={() => handleShare("twitter")}
-        className={`${buttonSize} rounded-lg bg-[#0a0b0d] transition-all hover:scale-110 hover:bg-[#32353d]`}
+        className={`${buttonSize} flex items-center justify-center rounded-lg bg-[#0a0b0d] transition-all hover:scale-110 hover:bg-[#32353d]`}
         aria-label="Share on Twitter"
         title="Share on Twitter"
       >
@@ -67,7 +67,7 @@ export function ShareButtons({
       {/* Farcaster Share Button */}
       <button
         onClick={() => handleShare("farcaster")}
-        className={`${buttonSize} rounded-lg bg-[#8A63D2] transition-all hover:scale-110 hover:bg-[#9f7ee3]`}
+        className={`${buttonSize} flex items-center justify-center rounded-lg bg-[#8A63D2] transition-all hover:scale-110 hover:bg-[#9f7ee3]`}
         aria-label="Share on Farcaster"
         title="Share on Farcaster"
       >
