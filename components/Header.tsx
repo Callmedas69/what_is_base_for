@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { WalletButton } from "@onchainfi/connect";
+import { ConnectButton } from "@/components/ConnectButton";
 import { APP_CONFIG } from "@/lib/config";
 import { useAudio } from "@/hooks/useAudio";
 import { useScrambleText } from "@/hooks/useScrambleText";
@@ -70,7 +70,7 @@ export function Header() {
 
       {/* Right: Wallet */}
       <div className="wallet-button-container">
-        <WalletButton position="inline" />
+        <ConnectButton />
       </div>
     </header>
   );

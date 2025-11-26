@@ -5,9 +5,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 export async function GET() {
   const manifest = {
     accountAssociation: {
-      header: "SIGN_AT_FARCASTER_DEVELOPER_PORTAL",
-      payload: "SIGN_AT_FARCASTER_DEVELOPER_PORTAL",
-      signature: "SIGN_AT_FARCASTER_DEVELOPER_PORTAL",
+      header: "eyJmaWQiOjIyNDIwLCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NmU1RDE3NGQ3MjYxOUFFNDUxMzE2OThhZjMwREYxZDc3M0UwZENCMyJ9",
+      payload: "eyJkb21haW4iOiJiYXNlZm9yLmdlb2FydC5zdHVkaW8ifQ",
+      signature: "zxV3PvzKqV3Og7itSgj4YolLLl5HMpFuQXf2aDGzE1AvuBVIP6s7n0snEZCStQmnGG9kDW2DJacnw3hrbnCNgxs=",
     },
     frame: {
       version: "1",

@@ -2,6 +2,7 @@
 
 import { RegularMint } from "./RegularMint";
 import { CustomMint } from "./CustomMint";
+import { FarcasterGate } from "./FarcasterGate";
 
 interface MintSectionProps {
   isConnected: boolean;
@@ -34,18 +35,22 @@ export function MintSection({
 }: MintSectionProps) {
   return (
     <div className="space-y-6">
-      <RegularMint
-        isConnected={isConnected}
-        isProcessing={isProcessing}
-        isMinting={isProcessing && mintType === "regular"}
-        alreadyMinted={alreadyMintedRegular}
-        isPaused={isPaused}
-        isSoldOut={isSoldOut}
-        onMint={onRegularMint}
-      />
+      {/* Free mint with Farcaster follow gate */}
+      <FarcasterGate>
+        <RegularMint
+          isConnected={isConnected}
+          isProcessing={isProcessing}
+          isMinting={isProcessing && mintType === "regular"}
+          alreadyMinted={alreadyMintedRegular}
+          isPaused={isPaused}
+          isSoldOut={isSoldOut}
+          onMint={onRegularMint}
+        />
+      </FarcasterGate>
 
       <div className="border-t border-[#eef0f3]" />
 
+      {/* Custom mint - no gate required */}
       <CustomMint
         isConnected={isConnected}
         isProcessing={isProcessing}

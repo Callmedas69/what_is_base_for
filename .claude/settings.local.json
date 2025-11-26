@@ -20,7 +20,10 @@
       "WebFetch(domain:docs.base.org)",
       "Bash(mkdir:*)",
       "WebFetch(domain:docs.privy.io)",
-      "WebFetch(domain:www.npmjs.com)"
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:docs.neynar.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

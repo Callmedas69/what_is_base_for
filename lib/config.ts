@@ -132,3 +132,18 @@ export const PAYMENT_CONFIG = {
   NETWORK: CURRENT_NETWORK,
   RECIPIENT: process.env.NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS || '',
 } as const;
+
+/**
+ * Farcaster Social Gate Configuration
+ * Users must follow and recast to mint (free mint)
+ */
+export const FARCASTER_GATE_CONFIG = {
+  // Enable/disable the gate
+  ENABLED: true,
+  // Your Farcaster FID (users must follow this account)
+  TARGET_FID: Number(process.env.NEXT_PUBLIC_FARCASTER_TARGET_FID) || 0,
+  // Cast hash that users must recast (without 0x prefix)
+  TARGET_CAST_HASH: process.env.NEXT_PUBLIC_FARCASTER_TARGET_CAST || '',
+  // Display username for UI
+  TARGET_USERNAME: process.env.NEXT_PUBLIC_FARCASTER_TARGET_USERNAME || 'basefor',
+} as const;

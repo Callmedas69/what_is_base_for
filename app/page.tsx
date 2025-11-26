@@ -3,11 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
-  useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
   useReadContract,
 } from "wagmi";
+import { useOnchainWallet } from "@onchainfi/connect";
 import { parseEventLogs } from "viem";
 import { BASEFOR_ABI } from "@/abi/Basefor.abi";
 import { CONTRACTS, MESSAGES } from "@/lib/config";
@@ -50,7 +50,9 @@ const X_SHARE_ITEM = {
 };
 
 export default function Home() {
-  const { isConnected, address } = useAccount();
+  const { isConnected, address: walletAddress } = useOnchainWallet();
+  // Cast to wagmi-compatible address type
+  const address = walletAddress as `0x${string}` | undefined;
   const { isFarcaster } = useFarcasterContext();
   const [phrases, setPhrases] = useState(["", "", ""]);
   const [mintType, setMintType] = useState<"regular" | "custom" | null>(null);

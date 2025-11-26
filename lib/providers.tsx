@@ -7,6 +7,7 @@
  */
 
 import { OnchainConnect } from "@onchainfi/connect";
+import { NeynarContextProvider, Theme } from "@neynar/react";
 import { base, baseSepolia } from "wagmi/chains";
 import { CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
 import { AudioProvider } from "@/hooks/useAudio";
@@ -32,17 +33,28 @@ export function Providers({ children }: { children: React.ReactNode }) {
         landingHeader: `Connect to ${APP_CONFIG.NAME}`,
         showWalletLoginFirst: true,
       }}
-      // Farcaster + Wallet only (no email, twitter, github)
+      // Wallet only - no social login needed
+      // Follow/Recast validation done via Neynar API
       privyConfig={{
-        loginMethods: ['farcaster', 'wallet'],
+        loginMethods: ['wallet'],
         appearance: {
+          theme: 'light',
+          accentColor: '#0000ff',
+          landingHeader: `Connect to ${APP_CONFIG.NAME}`,
           showWalletLoginFirst: true,
         },
       }}
     >
-      <AudioProvider>
-        {children}
-      </AudioProvider>
+      <NeynarContextProvider
+        settings={{
+          clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || '',
+          defaultTheme: Theme.Light,
+        }}
+      >
+        <AudioProvider>
+          {children}
+        </AudioProvider>
+      </NeynarContextProvider>
     </OnchainConnect>
   );
 }

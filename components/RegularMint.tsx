@@ -38,7 +38,7 @@ export function RegularMint({
           FREE MINT
         </h3>
         <p className="italic text-sm md:text-xs text-[#5b616e]">
-          1 pre-defined base&apos;s phrases
+          pre-defined phrases
         </p>
       </div>
       <button
