@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "@/lib/providers";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
 
 const farcasterEmbed = {
   version: "1",
   imageUrl: `${APP_URL}/embed_1200x800.webp`,
   button: {
-    title: "Open App",
+    title: "What is Base for?",
     action: {
       type: "launch_frame",
       name: "What is Base for?",
@@ -21,10 +20,10 @@ const farcasterEmbed = {
 
 export const metadata: Metadata = {
   title: "What is Base for?",
-  description: "A fully onchain collection of base spirits",
+  description: "Turns words into identity, and phrases into home",
   openGraph: {
     title: "What is Base for?",
-    description: "A fully onchain collection of base spirits",
+    description: "Turns words into identity, and phrases into home",
     siteName: "What is Base for?",
     images: [
       {
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "What is Base for?",
-    description: "A fully onchain collection of base spirits",
+    description: "Turns words into identity, and phrases into home",
     images: ["/ogHero_1200x630.webp"],
   },
   other: {
@@ -56,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   );

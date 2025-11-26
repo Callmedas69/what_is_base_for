@@ -6,7 +6,7 @@ import type { FarcasterContext } from '@/types/x402';
 
 /**
  * Hook to detect and extract Farcaster miniapp context
- * Uses official SDK for proper Mini App integration
+ * Uses official SDK isInMiniApp() for reliable detection
  */
 export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
   const [context, setContext] = useState<FarcasterContext & { isReady: boolean }>({
@@ -17,16 +17,12 @@ export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const initFarcaster = async () => {
+    async function init() {
       try {
-        // Check if running inside Farcaster client (iframe detection)
-        const isInFrame = window.self !== window.top ||
-                          window.location.ancestorOrigins?.length > 0 ||
-                          (window as unknown as { farcaster?: unknown }).farcaster !== undefined;
+        // Use official SDK detection method
+        const inMiniApp = await sdk.isInMiniApp();
 
-        if (!isInFrame) {
+        if (!inMiniApp) {
           // Not in Farcaster - regular web context
           setContext({
             isFarcaster: false,
@@ -37,7 +33,7 @@ export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
           return;
         }
 
-        // Get context from SDK (it's a Promise)
+        // Get context from SDK
         const sdkContext = await sdk.context;
 
         if (sdkContext?.user) {
@@ -52,14 +48,14 @@ export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
             username: sdkContext.user.username,
           });
         } else {
-          // In iframe but no SDK context - might be preview or other embed
+          // In MiniApp but no user context - preview mode
           setContext({
             isFarcaster: true,
             fid: null,
             username: null,
             isReady: true,
           });
-          console.log('[Farcaster] In iframe (no user context)');
+          console.log('[Farcaster] In MiniApp (no user context)');
         }
       } catch (error) {
         console.error('[Farcaster] Error initializing:', error);
@@ -70,9 +66,9 @@ export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
           isReady: true,
         });
       }
-    };
+    }
 
-    initFarcaster();
+    init();
   }, []);
 
   return context;
