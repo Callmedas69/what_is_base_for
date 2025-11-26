@@ -23,7 +23,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:docs.neynar.com)",
       "WebFetch(domain:github.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm audit:*)"
     ],
     "deny": [],
     "ask": []
