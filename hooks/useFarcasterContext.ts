@@ -45,14 +45,9 @@ export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
             isFarcaster: true,
             fid: sdkContext.user.fid ?? null,
             username: sdkContext.user.username ?? null,
-            isReady: false,
+            isReady: true,
           });
-
-          // Signal to Farcaster that app is ready
-          await sdk.actions.ready();
-
-          setContext(prev => ({ ...prev, isReady: true }));
-          console.log('[Farcaster] Mini App ready, context:', {
+          console.log('[Farcaster] Context loaded:', {
             fid: sdkContext.user.fid,
             username: sdkContext.user.username,
           });
@@ -62,14 +57,9 @@ export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
             isFarcaster: true,
             fid: null,
             username: null,
-            isReady: false,
+            isReady: true,
           });
-
-          // Still call ready to dismiss splash screen
-          await sdk.actions.ready();
-
-          setContext(prev => ({ ...prev, isReady: true }));
-          console.log('[Farcaster] Mini App ready (no user context)');
+          console.log('[Farcaster] In iframe (no user context)');
         }
       } catch (error) {
         console.error('[Farcaster] Error initializing:', error);

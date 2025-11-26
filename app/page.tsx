@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import {
   useWriteContract,
@@ -13,6 +13,7 @@ import { BASEFOR_ABI } from "@/abi/Basefor.abi";
 import { CONTRACTS, MESSAGES } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import { useFarcasterContext } from "@/hooks/useFarcasterContext";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { Header } from "@/components/Header";
 import { AudioVisualizer } from "@/components/AudioVisualizer";
 import { TokenDisplay } from "@/components/TokenDisplay";
@@ -133,6 +134,18 @@ export default function Home() {
   const alreadyMintedRegular = regularMinted >= 1n;
   const remainingCustomMints = Number(10n - customMinted);
   const isSoldOut = maxSupply > 0n && totalSupply >= maxSupply;
+
+  // Track if we've already called ready() to avoid duplicate calls
+  const hasCalledReady = useRef(false);
+
+  // Signal to Farcaster that app is ready after UI data loads
+  useEffect(() => {
+    if (isFarcaster && totalSupply !== undefined && !hasCalledReady.current) {
+      hasCalledReady.current = true;
+      sdk.actions.ready();
+      console.log('[Farcaster] Mini App ready - UI loaded');
+    }
+  }, [isFarcaster, totalSupply]);
 
   // Handle regular mint
   const handleRegularMint = () => {
