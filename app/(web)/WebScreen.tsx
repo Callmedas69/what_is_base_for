@@ -4,8 +4,8 @@ import { HomeContent } from "@/components/HomeContent";
 
 /**
  * WebScreen - Wrapper for Web browser mode
- * No Farcaster SDK, shows Farcaster share button
+ * No Farcaster SDK, uses URL-based sharing
  */
 export default function WebScreen() {
-  return <HomeContent hideFarcasterShare={false} logPrefix="[Web]" />;
+  return <HomeContent isMiniApp={false} logPrefix="[Web]" />;
 }

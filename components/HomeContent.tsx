@@ -17,41 +17,19 @@ import { AudioVisualizer } from "@/components/AudioVisualizer";
 import { TokenDisplay } from "@/components/TokenDisplay";
 import { MintSection } from "@/components/MintSection";
 import { SuccessModal } from "@/components/SuccessModal";
-import { FloatingDock } from "@/components/ui/floating-dock";
+import { FloatingDock, DockItem } from "@/components/ui/floating-dock";
 import { ProfileBadge } from "@/components/ProfileBadge";
 
 const SHARE_TEXT = "What is Base means for you?";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
 
-// Base dock items (shared)
-const BASE_DOCK_ITEMS = [
-  {
-    title: "OpenSea",
-    icon: <Image src="/opensea_logo.svg" alt="OpenSea" width={24} height={24} className="h-full w-full" />,
-    href: `https://opensea.io/assets/base/${CONTRACTS.BASEFOR}`,
-  },
-  {
-    title: "OnChainChecker",
-    icon: <Image src="/onchainchecker_logo.svg" alt="OnChainChecker" width={24} height={24} className="h-full w-full" />,
-    href: `https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}/0`,
-  },
-];
-
-const FARCASTER_SHARE_ITEM = {
-  title: "Share on Farcaster",
-  icon: <Image src="/farcster_new_logo.svg" alt="Share on Farcaster" width={24} height={24} className="h-full w-full" />,
-  href: `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`,
-};
-
-const X_SHARE_ITEM = {
-  title: "Share on X",
-  icon: <Image src="/twitter_logo.svg" alt="Share on X" width={24} height={24} className="h-full w-full" />,
-  href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`,
-};
-
 interface HomeContentProps {
-  /** Hide Farcaster share button (when already in Farcaster) */
-  hideFarcasterShare?: boolean;
+  /** True when running inside Farcaster MiniApp */
+  isMiniApp?: boolean;
+  /** Callback for Farcaster share in MiniApp mode (uses sdk.actions.composeCast) */
+  onFarcasterShare?: () => void;
+  /** Callback for opening external URLs in MiniApp mode (uses sdk.actions.openUrl) */
+  onOpenUrl?: (url: string) => void;
   /** Log prefix for debugging */
   logPrefix?: string;
 }
@@ -60,7 +38,7 @@ interface HomeContentProps {
  * HomeContent - Shared UI for both Web and MiniApp modes
  * Only dock items differ based on mode
  */
-export function HomeContent({ hideFarcasterShare = false, logPrefix = "[Home]" }: HomeContentProps) {
+export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, logPrefix = "[Home]" }: HomeContentProps) {
   const { isConnected, address: walletAddress } = useOnchainWallet();
   const address = walletAddress as `0x${string}` | undefined;
   const [phrases, setPhrases] = useState(["", "", ""]);
@@ -130,11 +108,61 @@ export function HomeContent({ hideFarcasterShare = false, logPrefix = "[Home]" }
   const remainingCustomMints = Number(10n - customMinted);
   const isSoldOut = maxSupply > 0n && totalSupply >= maxSupply;
 
+  // URL constants for dock items
+  const OPENSEA_URL = `https://opensea.io/assets/base/${CONTRACTS.BASEFOR}`;
+  const ONCHAINCHECKER_URL = `https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}/0`;
+  const FARCASTER_SHARE_URL = `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`;
+  const X_SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`;
+
   // Build dock items based on mode
-  const dockItems = [
-    ...BASE_DOCK_ITEMS,
-    ...(hideFarcasterShare ? [] : [FARCASTER_SHARE_ITEM]),
-    X_SHARE_ITEM,
+  // MiniApp: use sdk.actions.openUrl() for external links, sdk.actions.composeCast() for Farcaster share
+  // Web: use regular href links
+  const dockItems: DockItem[] = [
+    isMiniApp && onOpenUrl
+      ? {
+          title: "OpenSea",
+          icon: <Image src="/opensea_logo.svg" alt="OpenSea" width={24} height={24} className="h-full w-full" />,
+          onClick: () => onOpenUrl(OPENSEA_URL),
+        }
+      : {
+          title: "OpenSea",
+          icon: <Image src="/opensea_logo.svg" alt="OpenSea" width={24} height={24} className="h-full w-full" />,
+          href: OPENSEA_URL,
+        },
+    isMiniApp && onOpenUrl
+      ? {
+          title: "OnChainChecker",
+          icon: <Image src="/onchainchecker_logo.svg" alt="OnChainChecker" width={24} height={24} className="h-full w-full" />,
+          onClick: () => onOpenUrl(ONCHAINCHECKER_URL),
+        }
+      : {
+          title: "OnChainChecker",
+          icon: <Image src="/onchainchecker_logo.svg" alt="OnChainChecker" width={24} height={24} className="h-full w-full" />,
+          href: ONCHAINCHECKER_URL,
+        },
+    // Farcaster share: use SDK composeCast in MiniApp, URL in Web
+    isMiniApp && onFarcasterShare
+      ? {
+          title: "Share on Farcaster",
+          icon: <Image src="/farcster_new_logo.svg" alt="Share on Farcaster" width={24} height={24} className="h-full w-full" />,
+          onClick: onFarcasterShare,
+        }
+      : {
+          title: "Share on Farcaster",
+          icon: <Image src="/farcster_new_logo.svg" alt="Share on Farcaster" width={24} height={24} className="h-full w-full" />,
+          href: FARCASTER_SHARE_URL,
+        },
+    isMiniApp && onOpenUrl
+      ? {
+          title: "Share on X",
+          icon: <Image src="/twitter_logo.svg" alt="Share on X" width={24} height={24} className="h-full w-full" />,
+          onClick: () => onOpenUrl(X_SHARE_URL),
+        }
+      : {
+          title: "Share on X",
+          icon: <Image src="/twitter_logo.svg" alt="Share on X" width={24} height={24} className="h-full w-full" />,
+          href: X_SHARE_URL,
+        },
   ];
 
   // Handle regular mint

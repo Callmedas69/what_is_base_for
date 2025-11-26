@@ -19,6 +19,7 @@ const farcasterEmbed = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: "What is Base for?",
   description: "Turns words into identity, and phrases into home",
   openGraph: {

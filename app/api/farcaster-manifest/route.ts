@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
 
 export async function GET() {
   const manifest = {
@@ -9,15 +9,31 @@ export async function GET() {
       payload: "eyJkb21haW4iOiJiYXNlZm9yLmdlb2FydC5zdHVkaW8ifQ",
       signature: "zxV3PvzKqV3Og7itSgj4YolLLl5HMpFuQXf2aDGzE1AvuBVIP6s7n0snEZCStQmnGG9kDW2DJacnw3hrbnCNgxs=",
     },
-    frame: {
+    baseBuilder: {
+      ownerAddress: "0xdc41d6DA6Bb2D02b19316B2bfFF0CBb42606484d",
+    },
+    miniapp: {
       version: "1",
       name: "What is Base for?",
-      iconUrl: `${APP_URL}/icon_1024x1024.png`,
       homeUrl: APP_URL,
-      imageUrl: `${APP_URL}/embed_1200x800.webp`,
-      buttonTitle: "Open App",
+      iconUrl: `${APP_URL}/icon_1024x1024.png`,
       splashImageUrl: `${APP_URL}/splash_200x200.png`,
       splashBackgroundColor: "#ffffff",
+
+      // Metadata for discoverability
+      subtitle: "A fully onchain collection",
+      description: "Express what Base means to you with a unique onchain NFT. Mint your own Base spirit and share your message with the community.",
+      primaryCategory: "social",
+      tags: ["nft", "base", "onchain", "mint", "art"],
+
+      // Visual assets
+      heroImageUrl: `${APP_URL}/embed_1200x800.webp`,
+      tagline: "Turns words into identity, and phrases into home",
+
+      // OpenGraph metadata
+      ogTitle: "What is Base for?",
+      ogDescription: "Turns words into identity, and phrases into home",
+      ogImageUrl: `${APP_URL}/ogHero_1200x630.webp`,
     },
   };
 
