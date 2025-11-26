@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { Play, Pause } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { APP_CONFIG } from "@/lib/config";
@@ -147,13 +148,9 @@ export function AudioPlayer() {
             aria-label={isPlaying ? "Pause music" : "Play music"}
           >
             {isPlaying ? (
-              <svg className="h-5 w-5 md:h-6 md:w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-              </svg>
+              <Pause className="h-5 w-5 md:h-6 md:w-6" />
             ) : (
-              <svg className="h-5 w-5 md:h-6 md:w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <Play className="h-5 w-5 md:h-6 md:w-6" />
             )}
           </button>
 

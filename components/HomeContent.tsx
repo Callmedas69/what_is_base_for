@@ -10,7 +10,7 @@ import {
 import { useOnchainWallet } from "@onchainfi/connect";
 import { parseEventLogs } from "viem";
 import { BASEFOR_ABI } from "@/abi/Basefor.abi";
-import { CONTRACTS, MESSAGES } from "@/lib/config";
+import { CONTRACTS, MESSAGES, MINT_LIMITS } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import { Header } from "@/components/Header";
 import { AudioVisualizer } from "@/components/AudioVisualizer";
@@ -104,8 +104,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   });
 
   // Validation state
-  const alreadyMintedRegular = regularMinted >= 1n;
-  const remainingCustomMints = Number(10n - customMinted);
+  const alreadyMintedRegular = regularMinted >= BigInt(MINT_LIMITS.MAX_REGULAR_MINT);
+  const remainingCustomMints = Number(BigInt(MINT_LIMITS.MAX_CUSTOM_MINT) - customMinted);
   const isSoldOut = maxSupply > 0n && totalSupply >= maxSupply;
 
   // URL constants for dock items
@@ -180,7 +180,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
       return;
     }
     if (alreadyMintedRegular) {
-      alert("You've already minted your regular NFT (1/1). Try custom mint instead!");
+      alert(`You've already minted your free NFTs (${MINT_LIMITS.MAX_REGULAR_MINT}/${MINT_LIMITS.MAX_REGULAR_MINT}). Try custom mint instead!`);
       return;
     }
 

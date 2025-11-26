@@ -19,7 +19,7 @@ const CHAIN_MAP = {
  * Wraps with FarcasterProvider for proper SDK initialization
  */
 export function MiniAppClientProviders({ children }: { children: ReactNode }) {
-  const chain = CHAIN_MAP[CHAIN_CONFIG.CHAIN_ID as keyof typeof CHAIN_MAP] || baseSepolia;
+  const chain = CHAIN_MAP[CHAIN_CONFIG.CHAIN_ID as keyof typeof CHAIN_MAP] || base;
 
   return (
     <FarcasterProvider>

@@ -3,7 +3,7 @@
  */
 
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { baseSepolia } from "wagmi/chains";
+import { base } from "wagmi/chains";
 import { RAINBOWKIT_CONFIG } from "./config";
 
 /**
@@ -13,6 +13,6 @@ import { RAINBOWKIT_CONFIG } from "./config";
 export const wagmiConfig = getDefaultConfig({
   appName: RAINBOWKIT_CONFIG.appName,
   projectId: RAINBOWKIT_CONFIG.projectId,
-  chains: [baseSepolia],
+  chains: [base],
   ssr: true, // Enable server-side rendering support
 });

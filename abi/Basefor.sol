@@ -29,7 +29,7 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     using Strings for uint256;
 
     // --- Constants & State Variables ---
-    uint256 public MAX_MINT = 10;
+    uint256 public MAX_MINT = 20;
     uint256 public MAX_SUPPLY = 50000;
     uint256 private _nextTokenId = 0;
 
@@ -55,8 +55,8 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     mapping(uint256 => string[3]) private _customPhrases;
 
     // Track mints per wallet (separate limits for each mint type)
-    mapping(address => uint256) public mintedRegularPerWallet; // Max 1
-    mapping(address => uint256) public mintedCustomPerWallet; // Max 10
+    mapping(address => uint256) public mintedRegularPerWallet; // Max 3
+    mapping(address => uint256) public mintedCustomPerWallet; // Max 20
 
     // --- Events ---
     event Minted(address indexed to, uint256 indexed tokenId, string phrase);
@@ -114,7 +114,7 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     // --- Mint ---
     function mint() external nonReentrant whenNotPaused {
         if (_nextTokenId >= MAX_SUPPLY) revert SoldOut();
-        if (mintedRegularPerWallet[msg.sender] >= 1) revert MaxMintsReached();
+        if (mintedRegularPerWallet[msg.sender] >= 3) revert MaxMintsReached();
 
         uint256 tokenId = _nextTokenId;
         _nextTokenId++;
@@ -140,7 +140,7 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
         string calldata phrase3
     ) external nonReentrant whenNotPaused {
         if (_nextTokenId >= MAX_SUPPLY) revert SoldOut();
-        if (mintedCustomPerWallet[msg.sender] >= 10) revert MaxMintsReached();
+        if (mintedCustomPerWallet[msg.sender] >= 20) revert MaxMintsReached();
 
         // Count non-empty phrases and validate lengths
         uint256 customCount = 0;

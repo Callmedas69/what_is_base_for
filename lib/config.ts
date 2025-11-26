@@ -9,7 +9,7 @@ import { CONTRACT_ADDRESSES, type NetworkConfig } from "@/abi/Basefor.abi";
  * Current Network Configuration
  * Change this to switch networks
  */
-export const CURRENT_NETWORK = "baseSepolia" as const;
+export const CURRENT_NETWORK = "baseMainnet" as const;
 
 /**
  * Network Configuration (from contract addresses)
@@ -24,7 +24,6 @@ export const CONTRACTS = {
   ASSETS: NETWORK_CONFIG.assets,
   RENDERER: NETWORK_CONFIG.renderer,
   PHRASES: NETWORK_CONFIG.phrases,
-  FONT: NETWORK_CONFIG.font,
 } as const;
 
 /**

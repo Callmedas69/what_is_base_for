@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Play, Pause } from "lucide-react";
 import { ConnectButton } from "@/components/ConnectButton";
 import { APP_CONFIG } from "@/lib/config";
 import { useAudio } from "@/hooks/useAudio";
@@ -62,7 +63,7 @@ export function Header() {
         onClick={togglePlay}
         className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#dee1e7] bg-white hover:bg-gray-50 transition-colors"
       >
-        <span className="text-lg">{isPlaying ? "⏸" : "▶"}</span>
+        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
         <span className="hidden sm:inline text-sm font-medium text-[#0a0b0d]">
           {isPlaying ? "Pause" : "Play Music"}
         </span>

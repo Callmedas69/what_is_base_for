@@ -19,7 +19,7 @@ const CHAIN_MAP = {
 } as const;
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const chain = CHAIN_MAP[CHAIN_CONFIG.CHAIN_ID as keyof typeof CHAIN_MAP] || baseSepolia;
+  const chain = CHAIN_MAP[CHAIN_CONFIG.CHAIN_ID as keyof typeof CHAIN_MAP] || base;
 
   return (
     <OnchainConnect
