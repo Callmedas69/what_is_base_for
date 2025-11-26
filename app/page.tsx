@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
   useAccount,
@@ -12,6 +12,7 @@ import { parseEventLogs } from "viem";
 import { BASEFOR_ABI } from "@/abi/Basefor.abi";
 import { CONTRACTS, MESSAGES } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
+import { useFarcasterContext } from "@/hooks/useFarcasterContext";
 import { Header } from "@/components/Header";
 import { AudioVisualizer } from "@/components/AudioVisualizer";
 import { TokenDisplay } from "@/components/TokenDisplay";
@@ -23,7 +24,7 @@ import { ProfileBadge } from "@/components/ProfileBadge";
 const SHARE_TEXT = "What is Base means for you?";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-const DOCK_ITEMS = [
+const BASE_DOCK_ITEMS = [
   {
     title: "OpenSea",
     icon: <Image src="/opensea_logo.svg" alt="OpenSea" width={24} height={24} className="h-full w-full" />,
@@ -34,20 +35,23 @@ const DOCK_ITEMS = [
     icon: <Image src="/onchainchecker_logo.svg" alt="OnChainChecker" width={24} height={24} className="h-full w-full" />,
     href: `https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}`,
   },
-  {
-    title: "Share on Farcaster",
-    icon: <Image src="/farcster_new_logo.svg" alt="Share on Farcaster" width={24} height={24} className="h-full w-full" />,
-    href: `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`,
-  },
-  {
-    title: "Share on X",
-    icon: <Image src="/twitter_logo.svg" alt="Share on X" width={24} height={24} className="h-full w-full" />,
-    href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`,
-  },
 ];
+
+const FARCASTER_SHARE_ITEM = {
+  title: "Share on Farcaster",
+  icon: <Image src="/farcster_new_logo.svg" alt="Share on Farcaster" width={24} height={24} className="h-full w-full" />,
+  href: `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`,
+};
+
+const X_SHARE_ITEM = {
+  title: "Share on X",
+  icon: <Image src="/twitter_logo.svg" alt="Share on X" width={24} height={24} className="h-full w-full" />,
+  href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`,
+};
 
 export default function Home() {
   const { isConnected, address } = useAccount();
+  const { isFarcaster } = useFarcasterContext();
   const [phrases, setPhrases] = useState(["", "", ""]);
   const [mintType, setMintType] = useState<"regular" | "custom" | null>(null);
   const [mintedTokenId, setMintedTokenId] = useState<bigint | null>(null);
@@ -277,6 +281,16 @@ export default function Home() {
 
   const isProcessing = isPending || isConfirming;
 
+  // Build dock items - hide Farcaster share when already in Farcaster
+  const dockItems = useMemo(() => {
+    const items = [...BASE_DOCK_ITEMS];
+    if (!isFarcaster) {
+      items.push(FARCASTER_SHARE_ITEM);
+    }
+    items.push(X_SHARE_ITEM);
+    return items;
+  }, [isFarcaster]);
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-[#0a0b0d]">
       <Header />
@@ -295,7 +309,7 @@ export default function Home() {
 
               {/* Floating Dock */}
               <div className="w-full max-w-md flex justify-center">
-                <FloatingDock items={DOCK_ITEMS} />
+                <FloatingDock items={dockItems} />
               </div>
             </div>
 

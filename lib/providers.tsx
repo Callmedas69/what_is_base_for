@@ -32,6 +32,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         landingHeader: `Connect to ${APP_CONFIG.NAME}`,
         showWalletLoginFirst: true,
       }}
+      // Farcaster + Wallet only (no email, twitter, github)
+      privyConfig={{
+        loginMethods: ['farcaster', 'wallet'],
+        appearance: {
+          showWalletLoginFirst: true,
+        },
+      }}
     >
       <AudioProvider>
         {children}

@@ -15,7 +15,12 @@
       "Bash(npm ls:*)",
       "Bash(timeout:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "WebFetch(domain:miniapps.farcaster.xyz)",
+      "WebFetch(domain:docs.base.org)",
+      "Bash(mkdir:*)",
+      "WebFetch(domain:docs.privy.io)",
+      "WebFetch(domain:www.npmjs.com)"
     ],
     "deny": [],
     "ask": []

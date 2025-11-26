@@ -1,95 +1,88 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { sdk } from '@farcaster/miniapp-sdk';
 import type { FarcasterContext } from '@/types/x402';
 
 /**
  * Hook to detect and extract Farcaster miniapp context
- * Checks for FID and username from URL params or window object
+ * Uses official SDK for proper Mini App integration
  */
-export function useFarcasterContext(): FarcasterContext {
-  const [context, setContext] = useState<FarcasterContext>({
+export function useFarcasterContext(): FarcasterContext & { isReady: boolean } {
+  const [context, setContext] = useState<FarcasterContext & { isReady: boolean }>({
     isFarcaster: false,
     fid: null,
     username: null,
+    isReady: false,
   });
 
   useEffect(() => {
-    // Only run on client side
     if (typeof window === 'undefined') return;
 
-    try {
-      // Method 1: Check URL parameters (Farcaster frames often pass context via URL)
-      const searchParams = new URLSearchParams(window.location.search);
-      const fidParam = searchParams.get('fid');
-      const usernameParam = searchParams.get('username');
+    const initFarcaster = async () => {
+      try {
+        // Check if running inside Farcaster client (iframe detection)
+        const isInFrame = window.self !== window.top ||
+                          window.location.ancestorOrigins?.length > 0 ||
+                          (window as unknown as { farcaster?: unknown }).farcaster !== undefined;
 
-      // Method 2: Check window.farcaster object (Farcaster mobile app)
-      const windowFarcaster = (window as any).farcaster;
-
-      // Method 3: Check for Farcaster Frame context
-      const frameContext = (window as any).fc;
-
-      let fid: number | null = null;
-      let username: string | null = null;
-      let isFarcaster = false;
-
-      // Parse FID from URL params
-      if (fidParam) {
-        const parsedFid = parseInt(fidParam, 10);
-        if (!isNaN(parsedFid)) {
-          fid = parsedFid;
-          isFarcaster = true;
+        if (!isInFrame) {
+          // Not in Farcaster - regular web context
+          setContext({
+            isFarcaster: false,
+            fid: null,
+            username: null,
+            isReady: true,
+          });
+          return;
         }
-      }
 
-      // Parse username from URL params
-      if (usernameParam) {
-        username = usernameParam;
-        isFarcaster = true;
-      }
+        // Get context from SDK (it's a Promise)
+        const sdkContext = await sdk.context;
 
-      // Check window.farcaster object
-      if (windowFarcaster) {
-        isFarcaster = true;
-        if (windowFarcaster.fid && !fid) {
-          fid = windowFarcaster.fid;
+        if (sdkContext?.user) {
+          setContext({
+            isFarcaster: true,
+            fid: sdkContext.user.fid ?? null,
+            username: sdkContext.user.username ?? null,
+            isReady: false,
+          });
+
+          // Signal to Farcaster that app is ready
+          await sdk.actions.ready();
+
+          setContext(prev => ({ ...prev, isReady: true }));
+          console.log('[Farcaster] Mini App ready, context:', {
+            fid: sdkContext.user.fid,
+            username: sdkContext.user.username,
+          });
+        } else {
+          // In iframe but no SDK context - might be preview or other embed
+          setContext({
+            isFarcaster: true,
+            fid: null,
+            username: null,
+            isReady: false,
+          });
+
+          // Still call ready to dismiss splash screen
+          await sdk.actions.ready();
+
+          setContext(prev => ({ ...prev, isReady: true }));
+          console.log('[Farcaster] Mini App ready (no user context)');
         }
-        if (windowFarcaster.username && !username) {
-          username = windowFarcaster.username;
-        }
+      } catch (error) {
+        console.error('[Farcaster] Error initializing:', error);
+        setContext({
+          isFarcaster: false,
+          fid: null,
+          username: null,
+          isReady: true,
+        });
       }
+    };
 
-      // Check Farcaster Frame context
-      if (frameContext) {
-        isFarcaster = true;
-        if (frameContext.fid && !fid) {
-          fid = frameContext.fid;
-        }
-        if (frameContext.username && !username) {
-          username = frameContext.username;
-        }
-      }
-
-      setContext({
-        isFarcaster,
-        fid,
-        username,
-      });
-
-      // Log for debugging (remove in production)
-      if (isFarcaster) {
-        console.log('[Farcaster] Detected context:', { fid, username });
-      }
-    } catch (error) {
-      console.error('[Farcaster] Error detecting context:', error);
-      // Set safe defaults on error
-      setContext({
-        isFarcaster: false,
-        fid: null,
-        username: null,
-      });
-    }
+    initFarcaster();
   }, []);
 
   return context;
