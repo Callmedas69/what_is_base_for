@@ -77,6 +77,8 @@ export interface PaymentVerifyRequest {
   farcasterFid?: number;
   farcasterUsername?: string;
   sourcePlatform?: SourcePlatform;
+  paymentStatus?: PaymentStatus; // Optional: defaults to 'settled', use 'failed' for failed payments
+  errorMessage?: string; // Error message for failed payments
 }
 
 export interface PaymentVerifyResponse {

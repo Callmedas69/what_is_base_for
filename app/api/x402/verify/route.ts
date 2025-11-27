@@ -27,12 +27,22 @@ export async function POST(req: NextRequest) {
       farcasterFid,
       farcasterUsername,
       sourcePlatform = 'web',
+      paymentStatus = 'settled', // Default to 'settled', use 'failed' for failed payments
+      errorMessage,
     } = body;
 
-    // Validate required fields (paymentId now required - comes from SDK)
-    if (!paymentId || !paymentHeader || !phraseCount || !phrases || !walletAddress) {
+    // Validate required fields (paymentHeader optional for failed payments)
+    if (!paymentId || !phraseCount || !phrases || !walletAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // paymentHeader required for successful payments only
+    if (paymentStatus !== 'failed' && !paymentHeader) {
+      return NextResponse.json(
+        { error: 'Missing paymentHeader for successful payment' },
         { status: 400 }
       );
     }
@@ -70,9 +80,10 @@ export async function POST(req: NextRequest) {
       expectedAmount,
       walletAddress: `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
       sourcePlatform,
+      paymentStatus,
     });
 
-    // Store payment transaction in Supabase (SDK already verified with Onchain.fi)
+    // Store payment transaction in Supabase
     const { data: transaction, error: dbError } = await supabase
       .from('payment_transactions')
       .insert({
@@ -81,10 +92,14 @@ export async function POST(req: NextRequest) {
         phrase_count: phraseCount,
         amount_usdc: expectedAmount,
         phrases: phrases,
-        payment_status: 'verified',
+        payment_status: paymentStatus,
         mint_status: 'not_started',
-        payment_header: paymentHeader,
-        verified_at: new Date().toISOString(),
+        payment_header: paymentHeader || '',
+        // Dynamic timestamp based on status
+        ...(paymentStatus === 'settled'
+          ? { settled_at: new Date().toISOString() }
+          : { failed_at: new Date().toISOString() }),
+        error_message: errorMessage || null,
         // Farcaster data
         farcaster_fid: farcasterFid || null,
         farcaster_username: farcasterUsername || null,
