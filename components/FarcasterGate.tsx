@@ -2,6 +2,7 @@
 
 import { NeynarAuthButton, SIWN_variant } from '@neynar/react';
 import { useFarcasterGate } from '@/hooks/useFarcasterGate';
+import { useFarcaster } from '@/contexts/FarcasterContext';
 
 interface FarcasterGateProps {
   children: React.ReactNode;
@@ -27,6 +28,17 @@ export function FarcasterGate({ children }: FarcasterGateProps) {
     refreshStatus,
     error,
   } = useFarcasterGate();
+
+  const { isFarcaster, isReady, actions } = useFarcaster();
+
+  // Handle external links - use SDK in MiniApp, regular link in web
+  const handleOpenUrl = async (url: string) => {
+    if (isFarcaster && isReady) {
+      await actions.openUrl(url);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   // Gate disabled - show children directly
   if (!isGateEnabled) {
@@ -81,14 +93,12 @@ export function FarcasterGate({ children }: FarcasterGateProps) {
           
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
-          <a
-            href={`https://warpcast.com/${targetUsername}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => handleOpenUrl(`https://warpcast.com/${targetUsername}`)}
             className="inline-flex items-center justify-center rounded-lg bg-[#7c3aed] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#6d28d9]"
           >
             Follow @geoart
-          </a>
+          </button>
           <button
             onClick={refreshStatus}
             disabled={isChecking}

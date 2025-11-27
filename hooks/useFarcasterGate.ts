@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNeynarContext } from '@neynar/react';
-import { useFarcasterContext } from './useFarcasterContext';
+import { useFarcaster } from '@/contexts/FarcasterContext';
 import { FARCASTER_GATE_CONFIG } from '@/lib/config';
 
 interface FarcasterGateState {
@@ -22,8 +22,10 @@ interface FarcasterGateState {
  * Supports both miniapp (Farcaster SDK) and website (Neynar SIWN) contexts
  */
 export function useFarcasterGate() {
-  // Miniapp context from Farcaster SDK
-  const { fid: miniappFid, username: miniappUsername, isFarcaster, isReady: miniappReady } = useFarcasterContext();
+  // Miniapp context from unified Farcaster provider
+  const { user, isFarcaster, isReady: miniappReady } = useFarcaster();
+  const miniappFid = user?.fid ?? null;
+  const miniappUsername = user?.username ?? null;
 
   // Website context from Neynar SIWN
   const { user: neynarUser } = useNeynarContext();

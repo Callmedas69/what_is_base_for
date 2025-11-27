@@ -1,6 +1,6 @@
 "use client";
 
-import { useFarcasterContext } from "@/hooks/useFarcasterContext";
+import { useFarcaster } from "@/contexts/FarcasterContext";
 import { Providers } from "@/lib/providers";
 import { MiniAppClientProviders } from "./(miniapp)/MiniAppClientProviders";
 import MiniAppScreen from "./(miniapp)/MiniAppScreen";
@@ -11,9 +11,11 @@ import WebScreen from "./(web)/WebScreen";
  *
  * Web Mode: Regular browser → Providers + WebScreen
  * MiniApp Mode: Farcaster Warpcast → MiniAppClientProviders + MiniAppScreen
+ *
+ * Context is provided globally by FarcasterMiniAppProvider in layout.tsx
  */
 export default function Page() {
-  const { isFarcaster, isReady } = useFarcasterContext();
+  const { isFarcaster, isReady } = useFarcaster();
 
   // Wait for detection to complete
   if (!isReady) return null;

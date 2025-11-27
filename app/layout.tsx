@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FarcasterMiniAppProvider } from "@/contexts/FarcasterContext";
 import "./globals.css";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
@@ -56,7 +57,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        {children}
+        <FarcasterMiniAppProvider>
+          {children}
+        </FarcasterMiniAppProvider>
       </body>
     </html>
   );

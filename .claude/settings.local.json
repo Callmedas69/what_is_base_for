@@ -24,7 +24,9 @@
       "WebFetch(domain:docs.neynar.com)",
       "WebFetch(domain:github.com)",
       "Bash(curl:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\app\\(miniapp)\\FarcasterProvider.tsx\")",
+      "Bash(git show:*)"
     ],
     "deny": [],
     "ask": []

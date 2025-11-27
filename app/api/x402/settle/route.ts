@@ -14,7 +14,10 @@ const ONCHAIN_API_URL = 'https://api.onchain.fi/v1';
 
 /**
  * POST /api/x402/settle
- * Settles x402 payment with Onchain.fi and updates transaction in Supabase
+ * Settles x402 payment with Onchain.fi BEFORE minting
+ *
+ * Flow: verify → settle → mint → update-mint-status
+ * This endpoint handles step 2 (settle) - transfers funds before NFT mint
  */
 export async function POST(req: NextRequest) {
   try {
@@ -29,20 +32,18 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body: PaymentSettleRequest = await req.json();
-    const { paymentId, paymentHeader, tokenId, txHash, mintStatus = 'minted' } = body;
+    const { paymentId, paymentHeader, mintStatus = 'settled' } = body;
 
-    // Validate required fields
-    if (!paymentId || !paymentHeader || !tokenId || !txHash) {
+    // Validate required fields (tokenId/txHash not required - settle happens before mint)
+    if (!paymentId || !paymentHeader) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: paymentId, paymentHeader' },
         { status: 400 }
       );
     }
 
-    console.log('[x402/settle] Settling payment:', {
+    console.log('[x402/settle] Settling payment (pre-mint):', {
       paymentId,
-      tokenId,
-      txHash: `${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
       mintStatus,
     });
 
@@ -72,16 +73,13 @@ export async function POST(req: NextRequest) {
 
     console.log('[x402/settle] Payment settled with Onchain.fi');
 
-    // Update payment and mint status in Supabase
+    // Update payment status to settled (mint happens next)
     const { error: dbError } = await supabase
       .from('payment_transactions')
       .update({
         payment_status: 'settled',
-        mint_status: mintStatus,
-        token_id: tokenId,
-        tx_hash: txHash,
         settled_at: new Date().toISOString(),
-        minted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('payment_id', paymentId);
 
@@ -93,7 +91,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[x402/settle] Transaction updated in database');
+    console.log('[x402/settle] Payment settled - ready for mint');
 
     const response: PaymentSettleResponse = {
       success: true,

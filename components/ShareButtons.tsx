@@ -1,5 +1,7 @@
 "use client";
 
+import { useFarcaster } from "@/contexts/FarcasterContext";
+
 interface ShareButtonsProps {
   text: string;
   url: string;
@@ -15,12 +17,14 @@ export function ShareButtons({
   className = "",
   size = "md",
 }: ShareButtonsProps) {
+  const { isFarcaster, isReady, actions } = useFarcaster();
+
   // Twitter share URL (image preview via OpenGraph tags)
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
     text
   )}&url=${encodeURIComponent(url)}`;
 
-  // Farcaster share URL (with explicit image embed)
+  // Farcaster share URL (with explicit image embed) - used as fallback in web mode
   const getFarcasterUrl = () => {
     const baseUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text
@@ -37,9 +41,31 @@ export function ShareButtons({
 
   const farcasterUrl = getFarcasterUrl();
 
-  const handleShare = (platform: "twitter" | "farcaster") => {
-    const shareUrl = platform === "twitter" ? twitterUrl : farcasterUrl;
-    window.open(shareUrl, "_blank", "noopener,noreferrer,width=550,height=420");
+  /**
+   * Handle share action
+   * - In MiniApp: use SDK actions (stays in app)
+   * - In Web: use URL-based sharing (opens new window)
+   */
+  const handleShare = async (platform: "twitter" | "farcaster") => {
+    if (platform === "farcaster") {
+      if (isFarcaster && isReady) {
+        // Use SDK composeCast in MiniApp - stays in Warpcast
+        const embeds = imageUrl ? [imageUrl, url] : [url];
+        await actions.composeCast(text, embeds);
+      } else {
+        // Web fallback - open Warpcast compose
+        window.open(farcasterUrl, "_blank", "noopener,noreferrer,width=550,height=420");
+      }
+    } else {
+      // Twitter/X
+      if (isFarcaster && isReady) {
+        // Use SDK openUrl in MiniApp - opens in-app browser
+        await actions.openUrl(twitterUrl);
+      } else {
+        // Web fallback - open new window
+        window.open(twitterUrl, "_blank", "noopener,noreferrer,width=550,height=420");
+      }
+    }
   };
 
   const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";

@@ -87,8 +87,10 @@ export interface PaymentVerifyResponse {
 export interface PaymentSettleRequest {
   paymentId: string;
   paymentHeader: string;
-  tokenId: string;
-  txHash: string;
+  /** @deprecated Settlement now happens before mint - tokenId not available */
+  tokenId?: string;
+  /** @deprecated Settlement now happens before mint - txHash not available */
+  txHash?: string;
   mintStatus?: MintStatus;
 }
 
@@ -99,7 +101,13 @@ export interface PaymentSettleResponse {
 export interface UpdateMintStatusRequest {
   paymentId: string;
   mintStatus: MintStatus;
+  /** Token ID - required when mintStatus is 'minted' */
+  tokenId?: string;
+  /** Transaction hash - required when mintStatus is 'minted' */
+  txHash?: string;
+  /** Error message - used when mintStatus is 'failed' */
   errorMessage?: string;
+  /** Error code - used when mintStatus is 'failed' */
   errorCode?: string;
 }
 
@@ -132,6 +140,9 @@ export interface FarcasterUserStats {
 
 // Payment Hook Return Type
 export interface UseX402PaymentResult {
+  /**
+   * Step 1: Verify payment authorization (user signs EIP-712)
+   */
   verifyPayment: (
     phraseCount: PhraseCount,
     phrases: string[],
@@ -142,12 +153,24 @@ export interface UseX402PaymentResult {
     transactionId: string;
     paymentHeader: string;
   }>;
+  /**
+   * Step 2: Settle payment BEFORE minting (funds transferred)
+   */
   settlePayment: (
     paymentId: string,
-    paymentHeader: string,
+    paymentHeader: string
+  ) => Promise<void>;
+  /**
+   * Step 4: Record successful mint in database (after on-chain mint)
+   */
+  recordMintSuccess: (
+    paymentId: string,
     tokenId: bigint,
     txHash: string
   ) => Promise<void>;
+  /**
+   * Update mint status during the process
+   */
   updateMintStatus: (
     paymentId: string,
     mintStatus: MintStatus,

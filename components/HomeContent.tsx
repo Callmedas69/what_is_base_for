@@ -52,7 +52,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   } | null>(null);
 
   const { data: hash, writeContract, isPending } = useWriteContract();
-  const { settlePayment, updateMintStatus } = useX402Payment();
+  const { recordMintSuccess, updateMintStatus } = useX402Payment();
 
   const {
     data: receipt,
@@ -192,19 +192,23 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     });
   };
 
-  // Handle custom mint with payment
+  // Handle custom mint - Step 3: Execute on-chain mint (payment already settled)
   const handleCustomMint = async (payment: { paymentId: string; paymentHeader: string }) => {
     setPaymentData(payment);
+
+    // Update status to minting
     try {
       await updateMintStatus(payment.paymentId, "minting");
     } catch (error) {
       console.error(`${logPrefix} Failed to update mint status:`, error);
     }
 
+    // Wrap phrases with curly braces for contract
     const wrappedPhrase1 = phrases[0] ? `{${phrases[0]}}` : "";
     const wrappedPhrase2 = phrases[1] ? `{${phrases[1]}}` : "";
     const wrappedPhrase3 = phrases[2] ? `{${phrases[2]}}` : "";
 
+    console.log(`${logPrefix} Executing on-chain mint...`);
     setMintType("custom");
     writeContract({
       address: CONTRACTS.BASEFOR,
@@ -214,7 +218,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     });
   };
 
-  // Handle mint success
+  // Handle mint success - Step 4: Record mint in database
   useEffect(() => {
     if (!receipt || !isSuccess) return;
 
@@ -233,13 +237,15 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
           setMintedTokenId(tokenId);
           setShowModal(true);
 
+          // Record mint success in database (payment was already settled pre-mint)
           if (paymentData && mintType === "custom") {
-            console.log(`${logPrefix} Settling payment after successful mint`);
+            console.log(`${logPrefix} Recording mint success...`);
             try {
-              await settlePayment(paymentData.paymentId, paymentData.paymentHeader, tokenId, txHash);
-              console.log(`${logPrefix} Payment settled successfully`);
+              await recordMintSuccess(paymentData.paymentId, tokenId, txHash);
+              console.log(`${logPrefix} Mint recorded successfully`);
             } catch (error) {
-              console.error(`${logPrefix} Failed to settle payment:`, error);
+              console.error(`${logPrefix} Failed to record mint:`, error);
+              // Non-critical - mint already succeeded on-chain
             }
           }
         }
@@ -257,7 +263,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     };
 
     handleMintSuccess();
-  }, [receipt, isSuccess, paymentData, mintType, settlePayment, updateMintStatus, logPrefix]);
+  }, [receipt, isSuccess, paymentData, mintType, recordMintSuccess, updateMintStatus, logPrefix]);
 
   // Parse tokenURI for animation_url
   useEffect(() => {

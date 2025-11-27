@@ -24,9 +24,11 @@ import type {
  * Handles payment verification, settlement, and status updates with Onchain.fi
  * Includes Farcaster miniapp support
  *
- * Uses OnchainConnect SDK for two-step payment flow:
- * 1. verify() - Verifies payment authorization with user's wallet signature
- * 2. settle() - Settles the payment after successful mint
+ * Correct payment flow for custom mint:
+ * 1. verify() - User signs EIP-712 authorization (no funds move)
+ * 2. settle() - Payment transferred via Onchain.fi (BEFORE mint)
+ * 3. mint() - On-chain NFT mint (after payment secured)
+ * 4. recordMintSuccess() - Update DB with tokenId + txHash
  */
 export function useX402Payment(): UseX402PaymentResult {
   const [isVerifying, setIsVerifying] = useState(false);
@@ -121,20 +123,18 @@ export function useX402Payment(): UseX402PaymentResult {
   };
 
   /**
-   * Settle payment after successful mint
+   * Settle payment BEFORE minting
+   * This transfers funds via Onchain.fi SDK
+   * Must be called after verify() and before mint()
    */
   const settlePayment = async (
     paymentId: string,
-    paymentHeader: string,
-    tokenId: bigint,
-    txHash: string
+    paymentHeader: string
   ) => {
     setIsSettling(true);
     try {
-      console.log('[useX402Payment] Settling payment:', {
+      console.log('[useX402Payment] Settling payment (pre-mint):', {
         paymentId,
-        tokenId: tokenId.toString(),
-        txHash: `${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
       });
 
       // Step 1: Settle via OnchainConnect SDK
@@ -145,16 +145,14 @@ export function useX402Payment(): UseX402PaymentResult {
         throw new Error('Payment settlement failed');
       }
 
-      // Step 2: Update our database with settlement details
+      // Step 2: Update our database with settlement status
       const response = await fetch('/api/x402/settle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentId,
           paymentHeader,
-          tokenId: tokenId.toString(),
-          txHash,
-          mintStatus: 'minted',
+          mintStatus: 'settled', // Payment secured, ready to mint
         }),
       });
 
@@ -164,12 +162,55 @@ export function useX402Payment(): UseX402PaymentResult {
         throw new Error((data as any).error || 'Payment settlement failed');
       }
 
-      console.log('[useX402Payment] Payment settled successfully');
+      console.log('[useX402Payment] Payment settled successfully - ready to mint');
     } catch (error) {
       console.error('[useX402Payment] Settlement error:', error);
       throw error;
     } finally {
       setIsSettling(false);
+    }
+  };
+
+  /**
+   * Record successful mint in database
+   * Called after on-chain mint succeeds
+   */
+  const recordMintSuccess = async (
+    paymentId: string,
+    tokenId: bigint,
+    txHash: string
+  ) => {
+    setIsUpdating(true);
+    try {
+      console.log('[useX402Payment] Recording mint success:', {
+        paymentId,
+        tokenId: tokenId.toString(),
+        txHash: `${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
+      });
+
+      const response = await fetch('/api/x402/update-mint-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId,
+          mintStatus: 'minted',
+          tokenId: tokenId.toString(),
+          txHash,
+        }),
+      });
+
+      const data: UpdateMintStatusResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error((data as any).error || 'Failed to record mint success');
+      }
+
+      console.log('[useX402Payment] Mint success recorded');
+    } catch (error) {
+      console.error('[useX402Payment] Record mint error:', error);
+      // Don't throw - this is tracking, mint already succeeded
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -219,6 +260,7 @@ export function useX402Payment(): UseX402PaymentResult {
   return {
     verifyPayment,
     settlePayment,
+    recordMintSuccess,
     updateMintStatus,
     isVerifying,
     isSettling,

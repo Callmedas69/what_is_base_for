@@ -11,18 +11,25 @@ const supabase = createClient(
 /**
  * POST /api/x402/update-mint-status
  * Updates mint status for a payment transaction
- * Used to track: not_started → minting → minted/failed
+ *
+ * Flow: verify → settle → mint → update-mint-status
+ * This endpoint handles step 3 (minting) and step 4 (minted/failed)
+ *
+ * Status transitions:
+ * - "minting": Mint transaction submitted
+ * - "minted": Mint confirmed, includes tokenId + txHash
+ * - "failed": Mint or payment failed, includes error details
  */
 export async function POST(req: NextRequest) {
   try {
     // Parse request body
     const body: UpdateMintStatusRequest = await req.json();
-    const { paymentId, mintStatus, errorMessage, errorCode } = body;
+    const { paymentId, mintStatus, tokenId, txHash, errorMessage, errorCode } = body;
 
     // Validate required fields
     if (!paymentId || !mintStatus) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: paymentId, mintStatus' },
         { status: 400 }
       );
     }
@@ -39,20 +46,25 @@ export async function POST(req: NextRequest) {
     console.log('[x402/update-mint-status] Updating status:', {
       paymentId,
       mintStatus,
+      tokenId: tokenId || null,
+      txHash: txHash ? `${txHash.slice(0, 10)}...` : null,
       hasError: !!errorMessage,
     });
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, any> = {
       mint_status: mintStatus,
       updated_at: new Date().toISOString(),
     };
 
-    // Add timestamp based on status
+    // Add timestamp and data based on status
     if (mintStatus === 'minting') {
       updateData.minting_started_at = new Date().toISOString();
     } else if (mintStatus === 'minted') {
       updateData.minted_at = new Date().toISOString();
+      // Record NFT details when minted
+      if (tokenId) updateData.token_id = tokenId;
+      if (txHash) updateData.tx_hash = txHash;
     } else if (mintStatus === 'failed') {
       updateData.failed_at = new Date().toISOString();
       updateData.error_message = errorMessage || null;
@@ -73,7 +85,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[x402/update-mint-status] Status updated successfully');
+    console.log('[x402/update-mint-status] Status updated:', mintStatus);
 
     const response: UpdateMintStatusResponse = {
       success: true,

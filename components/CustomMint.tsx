@@ -37,7 +37,7 @@ export function CustomMint({
 
   const clientConnected = mounted && isConnected;
 
-  const { verifyPayment, isVerifying } = useX402Payment();
+  const { verifyPayment, settlePayment, updateMintStatus, isVerifying, isSettling } = useX402Payment();
 
   const handlePhraseChange = (index: number, value: string) => {
     const newPhrases = [...phrases];
@@ -82,28 +82,53 @@ export function CustomMint({
       return;
     }
 
+    let paymentData: { paymentId: string; paymentHeader: string } | null = null;
+
     try {
-      // Verify payment with x402
-      const paymentData = await verifyPayment(
+      // Step 1: Verify payment (user signs EIP-712)
+      console.log("[CustomMint] Step 1: Verifying payment...");
+      paymentData = await verifyPayment(
         phraseCount,
         activePhrases,
         walletAddress
       );
+      console.log("[CustomMint] Payment verified:", paymentData.paymentId);
 
-      // Trigger mint with payment data
+      // Step 2: Settle payment (funds transferred BEFORE mint)
+      console.log("[CustomMint] Step 2: Settling payment...");
+      await settlePayment(paymentData.paymentId, paymentData.paymentHeader);
+      console.log("[CustomMint] Payment settled successfully");
+
+      // Step 3: Trigger mint (payment already secured)
+      console.log("[CustomMint] Step 3: Initiating mint...");
       onMint(paymentData);
     } catch (error) {
-      console.error("[CustomMint] Payment verification failed:", error);
+      console.error("[CustomMint] Payment/mint failed:", error);
+
+      // Record failure in database if we have a payment ID
+      if (paymentData?.paymentId) {
+        try {
+          await updateMintStatus(
+            paymentData.paymentId,
+            "failed",
+            error instanceof Error ? error.message : "Payment failed",
+            "PAYMENT_OR_SETTLE_FAILED"
+          );
+        } catch (statusError) {
+          console.error("[CustomMint] Failed to update status:", statusError);
+        }
+      }
+
       alert(
         error instanceof Error
           ? error.message
-          : "Payment verification failed. Please try again."
+          : "Payment failed. Please try again."
       );
     }
   };
 
   const currentPrice = PAYMENT_CONFIG.PRICES[phraseCount];
-  const isDisabled = !clientConnected || isProcessing || isVerifying || isPaused || isSoldOut;
+  const isDisabled = !clientConnected || isProcessing || isVerifying || isSettling || isPaused || isSoldOut;
 
   return (
     <div className="space-y-4">
@@ -134,7 +159,7 @@ export function CustomMint({
             onChange={(e) => handlePhraseChange(index, e.target.value)}
             placeholder={PHRASE_CONFIG.PLACEHOLDER[index]}
             maxLength={PHRASE_CONFIG.MAX_LENGTH}
-            disabled={isProcessing || isVerifying || index >= phraseCount}
+            disabled={isProcessing || isVerifying || isSettling || index >= phraseCount}
             className={`w-full rounded-lg border px-4 py-3 md:py-2.5 text-[#0a0b0d] placeholder-[#b1b7c3] focus:border-[#0000ff] focus:outline-none transition-all ${
               index >= phraseCount
                 ? "border-[#eef0f3] bg-[#f9fafb] opacity-50 cursor-not-allowed"
@@ -154,6 +179,8 @@ export function CustomMint({
           ? "Connect Wallet"
           : isVerifying
           ? MESSAGES.PAYMENT_VERIFYING
+          : isSettling
+          ? "Settling Payment..."
           : isMinting
           ? MESSAGES.MINTING
           : isPaused
