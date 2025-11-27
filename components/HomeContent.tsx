@@ -210,10 +210,10 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
       console.error(`${logPrefix} Failed to update mint status:`, error);
     }
 
-    // Wrap phrases with curly braces for contract
-    const wrappedPhrase1 = phrases[0] ? `{${phrases[0]}}` : "";
-    const wrappedPhrase2 = phrases[1] ? `{${phrases[1]}}` : "";
-    const wrappedPhrase3 = phrases[2] ? `{${phrases[2]}}` : "";
+    // Wrap phrases with curly braces for contract (lowercase for consistency)
+    const wrappedPhrase1 = phrases[0] ? `{${phrases[0].toLowerCase()}}` : "";
+    const wrappedPhrase2 = phrases[1] ? `{${phrases[1].toLowerCase()}}` : "";
+    const wrappedPhrase3 = phrases[2] ? `{${phrases[2].toLowerCase()}}` : "";
 
     console.log(`${logPrefix} Executing on-chain mint...`);
     setMintType("custom");
