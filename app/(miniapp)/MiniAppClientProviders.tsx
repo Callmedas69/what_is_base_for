@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { OnchainConnect } from "@onchainfi/connect";
 import { NeynarContextProvider, Theme } from "@neynar/react";
+import { Toaster } from "sonner";
 import { AudioProvider } from "@/hooks/useAudio";
 import { CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
 import { base } from "wagmi/chains";
@@ -50,6 +51,7 @@ export function MiniAppClientProviders({ children }: { children: ReactNode }) {
         }}
       >
         <AudioProvider>
+          <Toaster position="top-center" richColors />
           {children}
         </AudioProvider>
       </NeynarContextProvider>

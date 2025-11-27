@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useBalance } from "wagmi";
 import { parseUnits } from "viem";
+import { toast } from "sonner";
 import { PHRASE_CONFIG, MESSAGES, PAYMENT_CONFIG } from "@/lib/config";
 import { PhraseSelector } from "./PhraseSelector";
 import { useX402Payment } from "@/hooks/useX402Payment";
@@ -69,22 +70,22 @@ export function CustomMint({
 
   const handlePayAndMint = async () => {
     if (!clientConnected || !walletAddress) {
-      alert(MESSAGES.CONNECT_WALLET);
+      toast.error(MESSAGES.CONNECT_WALLET);
       return;
     }
 
     if (isPaused) {
-      alert("Minting is currently paused. Please try again later.");
+      toast.error("Minting is currently paused. Please try again later.");
       return;
     }
 
     if (isSoldOut) {
-      alert("Collection is sold out!");
+      toast.error("Collection is sold out!");
       return;
     }
 
     if (remainingMints <= 0) {
-      alert("You've reached the maximum custom mints (20/20)");
+      toast.error("You've reached the maximum custom mints (20/20)");
       return;
     }
 
@@ -94,7 +95,7 @@ export function CustomMint({
     // Validate that all selected phrases are filled
     const emptyPhrases = activePhrases.filter((p) => !p.trim());
     if (emptyPhrases.length > 0) {
-      alert(`Please fill in all ${phraseCount} phrase(s) before minting.`);
+      toast.error(`Please fill in all ${phraseCount} phrase(s) before minting.`);
       return;
     }
 
@@ -103,9 +104,7 @@ export function CustomMint({
       (p) => p.length > PHRASE_CONFIG.MAX_LENGTH
     );
     if (invalidPhrases.length > 0) {
-      alert(
-        `Each phrase must be ${PHRASE_CONFIG.MAX_LENGTH} characters or less.`
-      );
+      toast.error(`Each phrase must be ${PHRASE_CONFIG.MAX_LENGTH} characters or less.`);
       return;
     }
 
@@ -120,6 +119,8 @@ export function CustomMint({
         walletAddress
       );
       console.log("[CustomMint] Payment verified:", paymentData.paymentId);
+      console.log("[AFTER VERIFY] paymentData:", JSON.stringify(paymentData, null, 2));
+      console.log("[AFTER VERIFY] paymentHeader:", paymentData?.paymentHeader);
 
       // Step 2: Settle payment (funds transferred BEFORE mint)
       console.log("[CustomMint] Step 2: Settling payment...");
@@ -146,7 +147,7 @@ export function CustomMint({
         }
       }
 
-      alert(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Payment failed. Please try again."

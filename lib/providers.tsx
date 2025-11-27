@@ -8,6 +8,7 @@
 
 import { OnchainConnect } from "@onchainfi/connect";
 import { NeynarContextProvider, Theme } from "@neynar/react";
+import { Toaster } from "sonner";
 import { base } from "wagmi/chains";
 import { CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
 import { AudioProvider } from "@/hooks/useAudio";
@@ -51,6 +52,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
       >
         <AudioProvider>
+          <Toaster position="top-center" richColors />
           {children}
         </AudioProvider>
       </NeynarContextProvider>

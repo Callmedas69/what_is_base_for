@@ -26,7 +26,8 @@
       "Bash(curl:*)",
       "Bash(npm audit:*)",
       "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\app\\(miniapp)\\FarcasterProvider.tsx\")",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []

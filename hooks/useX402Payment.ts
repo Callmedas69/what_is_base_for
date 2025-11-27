@@ -74,6 +74,8 @@ export function useX402Payment(): UseX402PaymentResult {
       });
 
       console.log('[useX402Payment] SDK verify result:', verifyResult);
+      console.log('[useX402Payment] SDK verify result FULL:', JSON.stringify(verifyResult, null, 2));
+      console.log('[useX402Payment] x402Header from SDK:', verifyResult.x402Header);
 
       if (!verifyResult.success) {
         console.error('[useX402Payment] Verify failed:', verifyResult.error || verifyResult);
@@ -82,6 +84,12 @@ export function useX402Payment(): UseX402PaymentResult {
 
       // The SDK returns an x402 header after user signs
       const paymentHeader = verifyResult.x402Header || 'SDK_GENERATED_HEADER';
+      console.log('[useX402Payment] paymentHeader after assignment:', paymentHeader);
+
+      // Warn if using fallback (likely invalid)
+      if (!verifyResult.x402Header) {
+        console.warn('[useX402Payment] WARNING: x402Header is missing from SDK response! Using fallback.')
+      }
 
       // Determine source platform
       const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';

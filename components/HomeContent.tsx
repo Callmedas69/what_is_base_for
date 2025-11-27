@@ -9,6 +9,7 @@ import {
 } from "wagmi";
 import { useOnchainWallet } from "@onchainfi/connect";
 import { parseEventLogs } from "viem";
+import { toast } from "sonner";
 import { BASEFOR_ABI } from "@/abi/Basefor.abi";
 import { CONTRACTS, MESSAGES, MINT_LIMITS } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
@@ -173,19 +174,19 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   // Handle regular mint
   const handleRegularMint = () => {
     if (!isConnected) {
-      alert(MESSAGES.CONNECT_WALLET);
+      toast.error(MESSAGES.CONNECT_WALLET);
       return;
     }
     if (isPaused) {
-      alert("Minting is currently paused. Please try again later.");
+      toast.error("Minting is currently paused. Please try again later.");
       return;
     }
     if (isSoldOut) {
-      alert("Collection is sold out!");
+      toast.error("Collection is sold out!");
       return;
     }
     if (alreadyMintedRegular) {
-      alert(`You've already minted your free NFTs (${MINT_LIMITS.MAX_REGULAR_MINT}/${MINT_LIMITS.MAX_REGULAR_MINT}). Try custom mint instead!`);
+      toast.error(`You've already minted your free NFTs (${MINT_LIMITS.MAX_REGULAR_MINT}/${MINT_LIMITS.MAX_REGULAR_MINT}). Try custom mint instead!`);
       return;
     }
 
@@ -226,11 +227,11 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   // Handle retry mint - for failed mints that were already paid
   const handleRetryMint = async (pendingMint: PendingMint) => {
     if (isPaused) {
-      alert("Minting is currently paused. Please try again later.");
+      toast.error("Minting is currently paused. Please try again later.");
       return;
     }
     if (isSoldOut) {
-      alert("Collection is sold out!");
+      toast.error("Collection is sold out!");
       return;
     }
 
