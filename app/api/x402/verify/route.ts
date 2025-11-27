@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { PaymentVerifyRequest, PaymentVerifyResponse } from '@/types/x402';
+import { PAYMENT_CONFIG } from '@/lib/config';
 
 // Initialize Supabase client with service role key (server-side only)
 const supabase = createClient(
@@ -8,37 +9,17 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Onchain.fi API configuration
-const ONCHAIN_API_KEY = process.env.ONCHAIN_API_KEY;
-const ONCHAIN_API_URL = 'https://api.onchain.fi/v1';
-const USDC_RECIPIENT = process.env.USDC_RECIPIENT_ADDRESS;
-
 /**
  * POST /api/x402/verify
- * Verifies x402 payment with Onchain.fi and stores transaction in Supabase
+ * Stores payment transaction in Supabase
+ * SDK handles Onchain.fi verify - this just stores the data
  */
 export async function POST(req: NextRequest) {
   try {
-    // Validate API key exists
-    if (!ONCHAIN_API_KEY) {
-      console.error('[x402/verify] ONCHAIN_API_KEY not configured');
-      return NextResponse.json(
-        { error: 'Payment service not configured' },
-        { status: 500 }
-      );
-    }
-
-    if (!USDC_RECIPIENT) {
-      console.error('[x402/verify] USDC_RECIPIENT_ADDRESS not configured');
-      return NextResponse.json(
-        { error: 'Payment recipient not configured' },
-        { status: 500 }
-      );
-    }
-
     // Parse request body
     const body: PaymentVerifyRequest = await req.json();
     const {
+      paymentId, // From SDK verify result
       paymentHeader,
       phraseCount,
       phrases,
@@ -48,8 +29,8 @@ export async function POST(req: NextRequest) {
       sourcePlatform = 'web',
     } = body;
 
-    // Validate required fields
-    if (!paymentHeader || !phraseCount || !phrases || !walletAddress) {
+    // Validate required fields (paymentId now required - comes from SDK)
+    if (!paymentId || !paymentHeader || !phraseCount || !phrases || !walletAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -80,61 +61,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate expected amount based on phrase count
-    const amounts: Record<1 | 2 | 3, string> = {
-      1: '0.20',
-      2: '0.40',
-      3: '0.30',
-    };
-    const expectedAmount = amounts[phraseCount as 1 | 2 | 3];
+    // Get amount from config
+    const expectedAmount = PAYMENT_CONFIG.PRICES[phraseCount as 1 | 2 | 3];
 
-    console.log('[x402/verify] Verifying payment:', {
+    console.log('[x402/verify] Storing payment:', {
+      paymentId,
       phraseCount,
       expectedAmount,
       walletAddress: `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
-      farcasterFid,
       sourcePlatform,
     });
 
-    // Verify payment with Onchain.fi
-    const verifyResponse = await fetch(`${ONCHAIN_API_URL}/verify`, {
-      method: 'POST',
-      headers: {
-        'X-API-Key': ONCHAIN_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        paymentHeader,
-        sourceNetwork: 'base',
-        destinationNetwork: 'base',
-        expectedAmount,
-        expectedToken: 'USDC',
-        recipientAddress: USDC_RECIPIENT,
-      }),
-    });
-
-    const verifyData = await verifyResponse.json();
-
-    if (!verifyResponse.ok) {
-      console.error('[x402/verify] Onchain.fi verification failed:', verifyData);
-      return NextResponse.json(
-        { error: verifyData.error || 'Payment verification failed' },
-        { status: 400 }
-      );
-    }
-
-    const paymentId = verifyData.data?.paymentId;
-    if (!paymentId) {
-      console.error('[x402/verify] No paymentId in response:', verifyData);
-      return NextResponse.json(
-        { error: 'Invalid verification response' },
-        { status: 500 }
-      );
-    }
-
-    console.log('[x402/verify] Payment verified:', paymentId);
-
-    // Store payment transaction in Supabase
+    // Store payment transaction in Supabase (SDK already verified with Onchain.fi)
     const { data: transaction, error: dbError } = await supabase
       .from('payment_transactions')
       .insert({
@@ -165,7 +103,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[x402/verify] Transaction stored:', transaction.id);
+    console.log('[x402/verify] Payment stored:', paymentId);
 
     const response: PaymentVerifyResponse = {
       success: true,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useBalance } from "wagmi";
 import { parseUnits } from "viem";
 import { toast } from "sonner";
@@ -47,6 +47,13 @@ export function CustomMint({
 
   const { verifyPayment, settlePayment, updateMintStatus, isVerifying, isSettling } = useX402Payment();
 
+  // Ref to prevent double verify and store verified payment data
+  const paymentFlowRef = useRef<{
+    inProgress: boolean;
+    paymentId: string | null;
+    paymentHeader: string | null;
+  }>({ inProgress: false, paymentId: null, paymentHeader: null });
+
   // Check USDC balance
   const { data: usdcBalance } = useBalance({
     address: walletAddress as `0x${string}` | undefined,
@@ -69,6 +76,12 @@ export function CustomMint({
   };
 
   const handlePayAndMint = async () => {
+    // Guard: Prevent double verify
+    if (paymentFlowRef.current.inProgress) {
+      console.log("[CustomMint] Payment flow already in progress, ignoring duplicate call");
+      return;
+    }
+
     if (!clientConnected || !walletAddress) {
       toast.error(MESSAGES.CONNECT_WALLET);
       return;
@@ -108,36 +121,49 @@ export function CustomMint({
       return;
     }
 
-    let paymentData: { paymentId: string; paymentHeader: string } | null = null;
+    // Lock payment flow
+    paymentFlowRef.current = { inProgress: true, paymentId: null, paymentHeader: null };
 
     try {
       // Step 1: Verify payment (user signs EIP-712)
       console.log("[CustomMint] Step 1: Verifying payment...");
-      paymentData = await verifyPayment(
+      const verifyResult = await verifyPayment(
         phraseCount,
         activePhrases,
         walletAddress
       );
-      console.log("[CustomMint] Payment verified:", paymentData.paymentId);
-      console.log("[AFTER VERIFY] paymentData:", JSON.stringify(paymentData, null, 2));
-      console.log("[AFTER VERIFY] paymentHeader:", paymentData?.paymentHeader);
 
-      // Step 2: Settle payment (funds transferred BEFORE mint)
+      // Store in ref immediately to prevent overwrites
+      paymentFlowRef.current.paymentId = verifyResult.paymentId;
+      paymentFlowRef.current.paymentHeader = verifyResult.paymentHeader;
+
+      console.log("[CustomMint] Payment verified:", verifyResult.paymentId);
+      console.log("[AFTER VERIFY] paymentData:", JSON.stringify(verifyResult, null, 2));
+      console.log("[AFTER VERIFY] paymentHeader:", verifyResult.paymentHeader);
+
+      // Step 2: Settle payment using ref values (prevents race condition overwrites)
       console.log("[CustomMint] Step 2: Settling payment...");
-      await settlePayment(paymentData.paymentId, paymentData.paymentHeader);
+      await settlePayment(
+        paymentFlowRef.current.paymentId!,
+        paymentFlowRef.current.paymentHeader!
+      );
       console.log("[CustomMint] Payment settled successfully");
 
       // Step 3: Trigger mint (payment already secured)
       console.log("[CustomMint] Step 3: Initiating mint...");
-      onMint(paymentData);
+      onMint({
+        paymentId: paymentFlowRef.current.paymentId!,
+        paymentHeader: paymentFlowRef.current.paymentHeader!,
+      });
     } catch (error) {
       console.error("[CustomMint] Payment/mint failed:", error);
 
       // Record failure in database if we have a payment ID
-      if (paymentData?.paymentId) {
+      const failedPaymentId = paymentFlowRef.current.paymentId;
+      if (failedPaymentId) {
         try {
           await updateMintStatus(
-            paymentData.paymentId,
+            failedPaymentId,
             "failed",
             error instanceof Error ? error.message : "Payment failed",
             "PAYMENT_OR_SETTLE_FAILED"
@@ -152,6 +178,9 @@ export function CustomMint({
           ? error.message
           : "Payment failed. Please try again."
       );
+    } finally {
+      // Reset ref after flow completes (success or failure)
+      paymentFlowRef.current = { inProgress: false, paymentId: null, paymentHeader: null };
     }
   };
 

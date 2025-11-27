@@ -69,6 +69,7 @@ export interface PaymentConfig {
 
 // API Request/Response Types
 export interface PaymentVerifyRequest {
+  paymentId: string; // From SDK verify result
   paymentHeader: string;
   phraseCount: PhraseCount;
   phrases: string[];

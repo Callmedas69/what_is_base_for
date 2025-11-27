@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   useWriteContract,
@@ -54,6 +54,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     paymentHeader: string;
   } | null>(null);
   const [retryingMint, setRetryingMint] = useState<PendingMint | null>(null);
+  const processedReceiptRef = useRef<string | null>(null);
 
   const { data: hash, writeContract, isPending } = useWriteContract();
   const { recordMintSuccess, updateMintStatus } = useX402Payment();
@@ -267,6 +268,10 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   useEffect(() => {
     if (!receipt || !isSuccess) return;
 
+    // Guard: skip if already processed this receipt (prevents re-render loop)
+    if (processedReceiptRef.current === receipt.transactionHash) return;
+    processedReceiptRef.current = receipt.transactionHash;
+
     const handleMintSuccess = async () => {
       try {
         const logs = parseEventLogs({
@@ -310,15 +315,15 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     handleMintSuccess();
   }, [receipt, isSuccess, paymentData, mintType, recordMintSuccess, updateMintStatus, logPrefix]);
 
-  // Parse tokenURI for animation_url
+  // Parse tokenURI for image
   useEffect(() => {
     if (!tokenURI || typeof tokenURI !== "string") return;
 
     try {
       const base64Data = tokenURI.split(",")[1];
       const jsonData = JSON.parse(atob(base64Data));
-      if (jsonData.animation_url) {
-        setAnimationUrl(jsonData.animation_url);
+      if (jsonData.image) {
+        setAnimationUrl(jsonData.image);
       }
     } catch (error) {
       console.error("Error parsing tokenURI:", error);
@@ -334,6 +339,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     setAnimationUrl("");
     setPaymentData(null);
     setRetryingMint(null);
+    // Note: Don't reset processedReceiptRef - wagmi keeps old receipt, resetting would break guard
     // Refetch pending mints in case a retry succeeded
     refetchPendingMints();
   };
@@ -395,7 +401,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
               onClose={handleModalClose}
               tokenId={mintedTokenId}
               hash={hash}
-              animationUrl={animationUrl}
+              imageUrl={animationUrl}
             />
           )}
         </div>

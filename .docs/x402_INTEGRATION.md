@@ -1,153 +1,44 @@
-# X402 Payment Integration with Onchain.fi
+# @onchainfi/connect - Integration Guide
 
-## **Overview**
-Implement flexible pay-per-phrase custom minting with USDC payments via Onchain.fi's x402 aggregator.
+Get up and running with wallet authentication and x402 payments in under 5 minutes.
 
-**IMPORTANT**: No smart contract modifications needed. Payment tracking handled off-chain via Supabase.
+## 🚀 Quick Integration (3 Steps)
 
----
-
-## **Pricing Structure** (Incentivized Tier Model)
-- **1 custom phrase**: 0.2 USDC
-- **2 custom phrases**: 0.4 USDC
-- **3 custom phrases**: 0.3 USDC ⭐ (Best value - 50% discount!)
-- **Regular mint**: FREE (unchanged)
-- **Custom mints**: Now PAID (removes 10/wallet free limit)
-
----
-
-## **Implementation Plan**
-
-### **Phase 1: Install Dependencies**
+### Step 1: Install
 
 ```bash
-npm install @onchainfi/connect @supabase/supabase-js
+npm install @onchainfi/connect
+# or
+pnpm add @onchainfi/connect
+# or
+yarn add @onchainfi/connect
 ```
 
-Required packages:
-- `@onchainfi/connect` - X402 payment SDK (includes Privy + Wagmi)
-- `@supabase/supabase-js` - Database client for payment tracking
+### Step 2: Get API Keys
 
----
+**Privy App ID** (Required for wallet auth):
+1. Go to [dashboard.privy.io](https://dashboard.privy.io)
+2. Sign up and create a new app
+3. Copy your App ID (looks like `clz6jx1j8...`)
 
-### **Phase 2: Supabase Database Setup**
+**Onchain API Key** (Required for payments):
+1. Visit [onchain.fi/get-api-key](https://onchain.fi/get-api-key)
+2. Enter your email
+3. Check your inbox for the API key
 
-1. **Create Supabase project** (if not exists)
-2. **Create payment tracking table**:
-
-```sql
--- Payment transactions table with Farcaster miniapp support
-CREATE TABLE payment_transactions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-
-  -- Payment info
-  payment_id TEXT UNIQUE NOT NULL,
-  wallet_address TEXT NOT NULL,
-  phrase_count INTEGER NOT NULL CHECK (phrase_count IN (1, 2, 3)),
-  amount_usdc DECIMAL(10, 6) NOT NULL,
-  phrases JSONB NOT NULL,
-  payment_header TEXT,
-  source_network TEXT DEFAULT 'base',
-  destination_network TEXT DEFAULT 'base',
-
-  -- Status tracking
-  payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'verified', 'settled', 'failed')),
-  mint_status TEXT NOT NULL DEFAULT 'not_started' CHECK (mint_status IN ('not_started', 'minting', 'minted', 'failed')),
-
-  -- NFT info
-  token_id BIGINT,
-  tx_hash TEXT,
-
-  -- Farcaster miniapp support
-  farcaster_fid BIGINT,
-  farcaster_username TEXT,
-  source_platform TEXT DEFAULT 'web' CHECK (source_platform IN ('web', 'farcaster_miniapp', 'mobile')),
-
-  -- Timestamps
-  verified_at TIMESTAMP,
-  settled_at TIMESTAMP,
-  minting_started_at TIMESTAMP,
-  minted_at TIMESTAMP,
-  failed_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-
-  -- Error tracking
-  error_message TEXT,
-  error_code TEXT
-);
-
--- Indexes for fast lookups
-CREATE INDEX idx_payment_id ON payment_transactions(payment_id);
-CREATE INDEX idx_wallet_address ON payment_transactions(wallet_address);
-CREATE INDEX idx_payment_status ON payment_transactions(payment_status);
-CREATE INDEX idx_mint_status ON payment_transactions(mint_status);
-CREATE INDEX idx_farcaster_fid ON payment_transactions(farcaster_fid);
-CREATE INDEX idx_farcaster_username ON payment_transactions(farcaster_username);
-CREATE INDEX idx_source_platform ON payment_transactions(source_platform);
-CREATE INDEX idx_created_at ON payment_transactions(created_at DESC);
-CREATE INDEX idx_token_id ON payment_transactions(token_id);
-
--- Composite index for Farcaster user lookups
-CREATE INDEX idx_farcaster_user ON payment_transactions(farcaster_fid, farcaster_username) WHERE farcaster_fid IS NOT NULL;
-
--- Auto-update timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_payment_transactions_updated_at
-  BEFORE UPDATE ON payment_transactions
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Optional: View for Farcaster users
-CREATE OR REPLACE VIEW farcaster_users_stats AS
-SELECT
-  farcaster_fid,
-  farcaster_username,
-  COUNT(*) as total_mints,
-  COUNT(*) FILTER (WHERE mint_status = 'minted') as successful_mints,
-  COUNT(*) FILTER (WHERE payment_status = 'settled') as paid_mints,
-  SUM(amount_usdc) as total_spent_usdc,
-  MIN(created_at) as first_mint_at,
-  MAX(created_at) as last_mint_at
-FROM payment_transactions
-WHERE farcaster_fid IS NOT NULL
-GROUP BY farcaster_fid, farcaster_username;
-```
-
-3. **Add environment variables**:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-NEXT_PUBLIC_ONCHAIN_API_KEY=your-onchain-api-key
-ONCHAIN_API_KEY=your-onchain-api-key (server-side)
-NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id
-USDC_RECIPIENT_ADDRESS=0x... (your treasury)
-NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS=0x... (same as above)
-```
-
----
-
-### **Phase 3: Wrap App with OnchainConnect Provider**
-
-**Update app/layout.tsx**:
+### Step 3: Wrap Your App
 
 ```tsx
+// app/layout.tsx or _app.tsx
 import { OnchainConnect } from '@onchainfi/connect';
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html>
       <body>
         <OnchainConnect
-          privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
-          onchainApiKey={process.env.NEXT_PUBLIC_ONCHAIN_API_KEY!}
+          privyAppId="your-privy-app-id"
+          onchainApiKey="your-onchain-api-key"
         >
           {children}
         </OnchainConnect>
@@ -157,452 +48,516 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Note**: This replaces your current RainbowKit setup
-- OnchainConnect includes Privy (auth) + Wagmi (wallets) + Onchain (payments)
-- Migration needed from RainbowKit to Privy/OnchainConnect
+**Done!** You now have wallet authentication and payment capabilities.
 
 ---
 
-### **Phase 4: Backend API Routes**
+## 🎨 Add UI Components
 
-#### **`/app/api/x402/verify/route.ts`**
+### Option A: Use Pre-Built Components (Easiest)
 
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+```tsx
+import { WalletButton, PaymentForm } from '@onchainfi/connect';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export default function MyPage() {
+  return (
+    <div>
+      <WalletButton />
+      
+      <PaymentForm
+        recipientAddress="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+        defaultAmount="0.10"
+        onSuccess={({ txHash }) => alert(`Paid! TX: ${txHash}`)}
+      />
+    </div>
+  );
+}
+```
 
-export async function POST(req: NextRequest) {
-  try {
-    const {
-      paymentHeader,
-      phraseCount,
-      phrases,
-      walletAddress,
-      farcasterFid,
-      farcasterUsername,
-      sourcePlatform = 'web',
-    } = await req.json();
+### Option B: Build Custom UI with Hooks
 
-    // Calculate amount based on phrase count
-    const amounts = { 1: '0.20', 2: '0.40', 3: '0.30' };
-    const expectedAmount = amounts[phraseCount as keyof typeof amounts];
+```tsx
+import { useOnchainWallet, useOnchainPay } from '@onchainfi/connect';
 
-    // Verify payment with Onchain.fi
-    const verifyResponse = await fetch('https://api.onchain.fi/v1/verify', {
-      method: 'POST',
-      headers: {
-        'X-API-Key': process.env.ONCHAIN_API_KEY!,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        paymentHeader,
-        sourceNetwork: 'base',
-        destinationNetwork: 'base',
-        expectedAmount,
-        expectedToken: 'USDC',
-        recipientAddress: process.env.USDC_RECIPIENT_ADDRESS!,
-      }),
+export default function CustomPayment() {
+  const { address, isConnected } = useOnchainWallet();
+  const { pay, isPaying } = useOnchainPay();
+
+  const handlePay = async () => {
+    await pay({
+      to: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+      amount: '0.10',
+      onSuccess: (txHash) => console.log('Success!', txHash),
+      onError: (error) => console.error('Failed:', error),
     });
+  };
 
-    const verifyData = await verifyResponse.json();
-
-    if (!verifyResponse.ok) {
-      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
-    }
-
-    // Store payment in Supabase with Farcaster data
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .insert({
-        payment_id: verifyData.data.paymentId,
-        wallet_address: walletAddress.toLowerCase(),
-        phrase_count: phraseCount,
-        amount_usdc: expectedAmount,
-        phrases: phrases,
-        payment_status: 'verified',
-        mint_status: 'not_started',
-        payment_header: paymentHeader,
-        verified_at: new Date().toISOString(),
-        // Farcaster data
-        farcaster_fid: farcasterFid || null,
-        farcaster_username: farcasterUsername || null,
-        source_platform: sourcePlatform,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      paymentId: verifyData.data.paymentId,
-      transactionId: data.id,
-    });
-  } catch (error) {
-    console.error('Verify error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
-#### **`/app/api/x402/settle/route.ts`**
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function POST(req: NextRequest) {
-  try {
-    const { paymentId, paymentHeader, tokenId, txHash, mintStatus = 'minted' } = await req.json();
-
-    // Settle payment with Onchain.fi
-    const settleResponse = await fetch('https://api.onchain.fi/v1/settle', {
-      method: 'POST',
-      headers: {
-        'X-API-Key': process.env.ONCHAIN_API_KEY!,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        paymentId,
-        paymentHeader,
-        sourceNetwork: 'base',
-        destinationNetwork: 'base',
-      }),
-    });
-
-    if (!settleResponse.ok) {
-      return NextResponse.json({ error: 'Payment settlement failed' }, { status: 400 });
-    }
-
-    // Update payment and mint status in Supabase
-    const { error } = await supabase
-      .from('payment_transactions')
-      .update({
-        payment_status: 'settled',
-        mint_status: mintStatus,
-        token_id: tokenId,
-        tx_hash: txHash,
-        settled_at: new Date().toISOString(),
-        minted_at: new Date().toISOString(),
-      })
-      .eq('payment_id', paymentId);
-
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Settle error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
-#### **`/app/api/x402/update-mint-status/route.ts`** (Mint Status Tracking)
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function POST(req: NextRequest) {
-  try {
-    const { paymentId, mintStatus, errorMessage, errorCode } = await req.json();
-
-    const updateData: any = {
-      mint_status: mintStatus,
-      updated_at: new Date().toISOString(),
-    };
-
-    // Add timestamp based on status
-    if (mintStatus === 'minting') {
-      updateData.minting_started_at = new Date().toISOString();
-    } else if (mintStatus === 'minted') {
-      updateData.minted_at = new Date().toISOString();
-    } else if (mintStatus === 'failed') {
-      updateData.failed_at = new Date().toISOString();
-      updateData.error_message = errorMessage || null;
-      updateData.error_code = errorCode || null;
-    }
-
-    const { error } = await supabase
-      .from('payment_transactions')
-      .update(updateData)
-      .eq('payment_id', paymentId);
-
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Update mint status error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
-#### **`/app/api/x402/history/route.ts`** (Payment History)
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function GET(req: NextRequest) {
-  try {
-    const walletAddress = req.nextUrl.searchParams.get('wallet');
-    const farcasterFid = req.nextUrl.searchParams.get('fid');
-
-    if (!walletAddress && !farcasterFid) {
-      return NextResponse.json(
-        { error: 'Wallet address or Farcaster FID required' },
-        { status: 400 }
-      );
-    }
-
-    let query = supabase.from('payment_transactions').select('*');
-
-    if (walletAddress) {
-      query = query.eq('wallet_address', walletAddress.toLowerCase());
-    } else if (farcasterFid) {
-      query = query.eq('farcaster_fid', parseInt(farcasterFid));
-    }
-
-    const { data, error } = await query.order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
-    }
-
-    return NextResponse.json({ payments: data });
-  } catch (error) {
-    console.error('History error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
-#### **`/app/api/x402/farcaster-stats/route.ts`** (Farcaster User Stats)
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function GET(req: NextRequest) {
-  try {
-    const farcasterFid = req.nextUrl.searchParams.get('fid');
-
-    if (!farcasterFid) {
-      // Return all Farcaster users stats
-      const { data, error } = await supabase
-        .from('farcaster_users_stats')
-        .select('*')
-        .order('total_mints', { ascending: false });
-
-      if (error) {
-        console.error('Database error:', error);
-        return NextResponse.json({ error: 'Database error' }, { status: 500 });
-      }
-
-      return NextResponse.json({ stats: data });
-    } else {
-      // Return specific user stats
-      const { data, error } = await supabase
-        .from('farcaster_users_stats')
-        .select('*')
-        .eq('farcaster_fid', parseInt(farcasterFid))
-        .single();
-
-      if (error) {
-        console.error('Database error:', error);
-        return NextResponse.json({ error: 'Database error' }, { status: 500 });
-      }
-
-      return NextResponse.json({ stats: data });
-    }
-  } catch (error) {
-    console.error('Farcaster stats error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return (
+    <div>
+      {!isConnected ? (
+        <p>Please connect wallet</p>
+      ) : (
+        <button onClick={handlePay} disabled={isPaying}>
+          {isPaying ? 'Paying...' : 'Pay $0.10'}
+        </button>
+      )}
+    </div>
+  );
 }
 ```
 
 ---
 
-### **Phase 5: Frontend Components & Hooks**
+## 📋 Common Scenarios
 
-#### **1. Create Payment Hook - `hooks/useX402Payment.ts`**
+### Scenario 1: Simple Payment Button
 
-```typescript
-'use client';
+```tsx
+import { PaymentButton } from '@onchainfi/connect';
 
-import { useState } from 'react';
+<PaymentButton
+  to="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+  amount="0.10"
+  onSuccess={(txHash) => console.log('Paid!', txHash)}
+>
+  Donate $0.10
+</PaymentButton>
+```
+
+### Scenario 2: Show User's Balance
+
+```tsx
+import { BalanceDisplay } from '@onchainfi/connect';
+
+<BalanceDisplay 
+  format="full" 
+  showRefresh={true}
+/>
+// Displays: "0.50 USDC" with refresh button
+```
+
+### Scenario 3: Payment History
+
+```tsx
+import { TransactionHistory } from '@onchainfi/connect';
+
+<TransactionHistory 
+  limit={10}
+  autoRefresh={true}
+/>
+```
+
+### Scenario 4: Two-Step Payment (Verify → Confirm → Settle)
+
+```tsx
 import { useOnchainPay } from '@onchainfi/connect';
 
-export function useX402Payment() {
-  const { generatePaymentHeader } = useOnchainPay();
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isSettling, setIsSettling] = useState(false);
+function PaymentWithConfirmation() {
+  const { verify, settle, isVerifying, isSettling } = useOnchainPay();
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const verifyPayment = async (
-    phraseCount: number,
-    phrases: string[],
-    walletAddress: string
-  ) => {
-    setIsVerifying(true);
-    try {
-      const amounts = { 1: '0.20', 2: '0.40', 3: '0.30' };
-      const amount = amounts[phraseCount as keyof typeof amounts];
-
-      // Generate payment header using SDK
-      const paymentHeader = await generatePaymentHeader({
-        amount,
-        token: 'USDC',
-        recipient: process.env.NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS!,
-      });
-
-      // Verify with backend
-      const response = await fetch('/api/x402/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentHeader,
-          phraseCount,
-          phrases,
-          walletAddress,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Verification failed');
-      }
-
-      return {
-        paymentId: data.paymentId,
-        transactionId: data.transactionId,
-        paymentHeader,
-      };
-    } finally {
-      setIsVerifying(false);
+  const handleVerify = async () => {
+    const result = await verify({
+      to: '0x...',
+      amount: '0.10',
+    });
+    
+    if (result.success) {
+      setShowConfirm(true);  // Show confirmation UI
     }
   };
 
-  const settlePayment = async (
-    paymentId: string,
-    paymentHeader: string,
-    tokenId: bigint,
-    txHash: string
-  ) => {
-    setIsSettling(true);
-    try {
-      const response = await fetch('/api/x402/settle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId,
-          paymentHeader,
-          tokenId: tokenId.toString(),
-          txHash,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Settlement failed');
-      }
-
-      return data;
-    } finally {
-      setIsSettling(false);
+  const handleConfirm = async () => {
+    const result = await settle();
+    if (result.success) {
+      alert(`Paid! TX: ${result.txHash}`);
     }
   };
 
-  return {
-    verifyPayment,
-    settlePayment,
-    isVerifying,
-    isSettling,
-  };
+  return (
+    <div>
+      <button onClick={handleVerify} disabled={isVerifying}>
+        Review Payment
+      </button>
+      
+      {showConfirm && (
+        <div>
+          <p>Confirm payment of $0.10 to 0x...?</p>
+          <button onClick={handleConfirm} disabled={isSettling}>
+            Confirm & Send
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 ```
 
-#### **2. Create Phrase Selector - `components/PhraseSelector.tsx`**
+---
+
+## 🎛️ Advanced Configuration
+
+### Custom Chains & Connectors
+
+```tsx
+import { OnchainConnect } from '@onchainfi/connect';
+import { base, optimism, arbitrum } from 'wagmi/chains';
+import { walletConnect, coinbaseWallet, injected } from 'wagmi/connectors';
+
+<OnchainConnect
+  privyAppId="..."
+  onchainApiKey="..."
+  
+  // Multi-chain
+  chains={[base, optimism, arbitrum]}
+  defaultChain={base}
+  
+  // Custom connectors
+  connectors={[
+    injected(),
+    walletConnect({ projectId: 'your-walletconnect-project-id' }),
+    coinbaseWallet({ appName: 'My App Name' }),
+  ]}
+  
+  // Custom theme
+  appearance={{
+    theme: 'dark',
+    accentColor: '#7C3AED',
+    logo: '/my-logo.svg',
+    landingHeader: 'Connect to My App',
+    showWalletLoginFirst: false,
+  }}
+  
+  // Auth methods
+  loginMethods={['email', 'twitter', 'github', 'wallet']}
+>
+  <App />
+</OnchainConnect>
+```
+
+### Payment with Lifecycle Callbacks
+
+```tsx
+const { pay } = useOnchainPay({
+  callbacks: {
+    onSigningStart: () => console.log('Opening wallet...'),
+    onSigningComplete: () => console.log('Signed!'),
+    onVerificationStart: () => console.log('Verifying...'),
+    onVerificationComplete: () => console.log('Verified!'),
+    onSettlementStart: () => console.log('Settling...'),
+    onSettlementComplete: () => console.log('Done!'),
+  },
+});
+```
+
+---
+
+## 💅 Styling
+
+The package includes Tailwind CSS classes. Add to your `tailwind.config.js`:
+
+```js
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './node_modules/@onchainfi/connect/dist/**/*.{js,mjs}', // Add this
+  ],
+  // ...
+}
+```
+
+All components accept `className` for custom styling:
+
+```tsx
+<WalletButton className="my-custom-class" />
+<PaymentForm className="w-full max-w-md" />
+```
+
+---
+
+## 🌐 Environment Variables
+
+Create a `.env.local` file:
+
+```bash
+# Required
+NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+
+# Required for payments
+NEXT_PUBLIC_API_KEY=your-onchain-api-key
+
+# Optional
+NEXT_PUBLIC_API_URL=https://api.onchain.fi  # Default
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your-wc-id  # For WalletConnect
+```
+
+Then use in your app:
+
+```tsx
+<OnchainConnect
+  privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID}
+  onchainApiKey={process.env.NEXT_PUBLIC_API_KEY}
+>
+  <App />
+</OnchainConnect>
+```
+
+---
+
+## 🔧 Framework-Specific Setup
+
+### Next.js (App Router)
+
+```tsx
+// app/layout.tsx
+import { OnchainConnect } from '@onchainfi/connect';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <OnchainConnect
+          privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+          onchainApiKey={process.env.NEXT_PUBLIC_API_KEY}
+        >
+          {children}
+        </OnchainConnect>
+      </body>
+    </html>
+  );
+}
+```
+
+### Next.js (Pages Router)
+
+```tsx
+// pages/_app.tsx
+import { OnchainConnect } from '@onchainfi/connect';
+import type { AppProps } from 'next/app';
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <OnchainConnect
+      privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+      onchainApiKey={process.env.NEXT_PUBLIC_API_KEY}
+    >
+      <Component {...pageProps} />
+    </OnchainConnect>
+  );
+}
+```
+
+### Vite/Create React App
+
+```tsx
+// main.tsx or index.tsx
+import { OnchainConnect } from '@onchainfi/connect';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <OnchainConnect
+    privyAppId={import.meta.env.VITE_PRIVY_APP_ID}
+    onchainApiKey={import.meta.env.VITE_ONCHAIN_API_KEY}
+  >
+    <App />
+  </OnchainConnect>
+);
+```
+
+---
+
+## 🧪 Testing Your Integration
+
+### Test Wallet Connection
+
+1. Run your app
+2. Click the wallet button
+3. Try connecting with:
+   - ✅ Email (creates embedded wallet)
+   - ✅ Twitter/GitHub (creates embedded wallet)
+   - ✅ MetaMask/External wallet
+
+### Test Payment Flow
+
+1. Connect wallet
+2. Fund with testnet USDC (or use mainnet)
+3. Try a small payment (e.g., $0.01)
+4. Verify you see:
+   - Signature request
+   - Loading states
+   - Success message with transaction hash
+
+---
+
+## ❓ Troubleshooting
+
+### "Module not found: @onchainfi/connect"
+- Make sure you ran `npm install @onchainfi/connect`
+- Restart your dev server
+
+### "Wallet not connected" error
+- Make sure you wrapped your app with `<OnchainConnect>`
+- Check that `privyAppId` is set correctly
+
+### "API key not provided" error when paying
+- Pass `onchainApiKey` to `<OnchainConnect>`
+- Or pass to `useOnchainPay({ apiKey: '...' })`
+
+### Tailwind styles not working
+- Add the content path to `tailwind.config.js`
+- Restart your dev server after config changes
+
+### TypeScript errors
+- Make sure you have `@types/react` and `@types/react-dom` installed
+- Check peer dependencies are satisfied (React 18+, Wagmi 2+, Viem 2+)
+
+---
+
+## 📚 Full Example App
+
+Here's a complete minimal example:
+
+```tsx
+// app/layout.tsx
+import { OnchainConnect } from '@onchainfi/connect';
+import './globals.css';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <OnchainConnect
+          privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+          onchainApiKey={process.env.NEXT_PUBLIC_API_KEY}
+        >
+          {children}
+        </OnchainConnect>
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx
+// app/page.tsx
+'use client';
+
+import { 
+  WalletButton, 
+  PaymentForm, 
+  BalanceDisplay,
+  TransactionHistory 
+} from '@onchainfi/connect';
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen p-8">
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">My App</h1>
+        <div className="flex gap-4">
+          <BalanceDisplay showRefresh={true} />
+          <WalletButton position="inline" />
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto space-y-8">
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Send Payment</h2>
+          <PaymentForm
+            defaultAmount="0.10"
+            onSuccess={({ txHash }) => {
+              console.log('Payment successful!', txHash);
+            }}
+          />
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Payment History</h2>
+          <TransactionHistory limit={5} />
+        </section>
+      </main>
+    </div>
+  );
+}
+```
+
+```env
+# .env.local
+NEXT_PUBLIC_PRIVY_APP_ID=clz6jx1j8006712n37lfd6qka
+NEXT_PUBLIC_API_KEY=your-onchain-api-key
+```
+
+**That's it!** Run `npm run dev` and you have:
+- ✅ Wallet connection (email, social, external wallets)
+- ✅ Balance display
+- ✅ Payment form
+- ✅ Transaction history
+
+---
+
+## 🎯 Real-World Use Cases
+
+### Use Case 1: Content Paywall
 
 ```tsx
 'use client';
 
-interface PhraseSelectorProps {
-  selected: number;
-  onSelect: (count: number) => void;
-}
+import { useOnchainWallet, PaymentButton } from '@onchainfi/connect';
+import { useState } from 'react';
 
-const PRICING = {
-  1: { price: '0.20', label: '1 phrase' },
-  2: { price: '0.40', label: '2 phrases' },
-  3: { price: '0.30', label: '3 phrases', badge: 'Best Value!' },
-};
+export default function PremiumContent() {
+  const { isConnected } = useOnchainWallet();
+  const [hasPaid, setHasPaid] = useState(false);
 
-export function PhraseSelector({ selected, onSelect }: PhraseSelectorProps) {
+  if (!isConnected) {
+    return <p>Connect wallet to access premium content</p>;
+  }
+
+  if (!hasPaid) {
+    return (
+      <div>
+        <h2>Premium Content - $0.50</h2>
+        <PaymentButton
+          to="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          amount="0.50"
+          onSuccess={() => setHasPaid(true)}
+        >
+          Unlock Content ($0.50)
+        </PaymentButton>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-[#0a0b0d]">How many phrases?</p>
-      <div className="grid grid-cols-3 gap-2">
-        {([1, 2, 3] as const).map((count) => (
-          <button
-            key={count}
-            onClick={() => onSelect(count)}
-            className={`relative rounded-lg border-2 px-4 py-3 text-center transition-all ${
-              selected === count
-                ? 'border-[#0000ff] bg-[#0000ff]/5'
-                : 'border-[#dee1e7] hover:border-[#0000ff]/50'
-            }`}
+    <article>
+      <h1>Premium Content Unlocked! 🎉</h1>
+      {/* Your premium content here */}
+    </article>
+  );
+}
+```
+
+### Use Case 2: Donation Widget
+
+```tsx
+import { PaymentButton } from '@onchainfi/connect';
+
+const DONATION_AMOUNTS = ['0.10', '0.50', '1.00', '5.00'];
+
+export function DonationWidget() {
+  return (
+    <div>
+      <h3>Support Our Work</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {DONATION_AMOUNTS.map(amount => (
+          <PaymentButton
+            key={amount}
+            to="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            amount={amount}
+            onSuccess={() => alert('Thank you for donating!')}
           >
-            {PRICING[count].badge && (
-              <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[#0000ff] px-2 py-0.5 text-[10px] font-bold text-white whitespace-nowrap">
-                {PRICING[count].badge}
-              </span>
-            )}
-            <div className="text-sm font-semibold text-[#0a0b0d]">
-              {PRICING[count].label}
-            </div>
-            <div className="text-xs text-[#5b616e] mt-1">
-              {PRICING[count].price} USDC
-            </div>
-          </button>
+            ${amount}
+          </PaymentButton>
         ))}
       </div>
     </div>
@@ -610,371 +565,194 @@ export function PhraseSelector({ selected, onSelect }: PhraseSelectorProps) {
 }
 ```
 
-#### **3. Update CustomMint.tsx**
+### Use Case 3: E-Commerce Checkout
 
-Add payment flow integration (see full implementation in repository)
+```tsx
+import { useOnchainPay } from '@onchainfi/connect';
 
-#### **4. Update app/page.tsx**
+export function CheckoutButton({ cartTotal, merchantAddress }) {
+  const { pay, isPaying } = useOnchainPay();
 
-Modify `handleCustomMint` to work with payment verification:
-
-```typescript
-const handleCustomMint = async (paymentData: { paymentId: string, paymentHeader: string }) => {
-  // ... existing validation ...
-
-  // Auto-wrap phrases
-  const wrappedPhrase1 = phrases[0] ? `{${phrases[0]}}` : "";
-  const wrappedPhrase2 = phrases[1] ? `{${phrases[1]}}` : "";
-  const wrappedPhrase3 = phrases[2] ? `{${phrases[2]}}` : "";
-
-  setMintType("custom");
-
-  // Mint NFT
-  const tx = await writeContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
-    functionName: "mintWithCustomPhrases",
-    args: [wrappedPhrase1, wrappedPhrase2, wrappedPhrase3],
-  });
-
-  // After successful mint, settle payment
-  if (tx.hash && mintedTokenId) {
-    await settlePayment(
-      paymentData.paymentId,
-      paymentData.paymentHeader,
-      mintedTokenId,
-      tx.hash
-    );
-  }
-};
-```
-
----
-
-### **Phase 6: Configuration Updates**
-
-**Update `lib/config.ts`**:
-
-```typescript
-/**
- * Payment Configuration for X402 Integration
- */
-export const PAYMENT_CONFIG = {
-  ENABLED: true,
-  PRICES: {
-    ONE_PHRASE: '0.20',
-    TWO_PHRASES: '0.40',
-    THREE_PHRASES: '0.30', // Best value - 50% discount!
-  },
-  TOKEN: 'USDC',
-  NETWORK: 'base',
-  RECIPIENT: process.env.NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS || '',
-} as const;
-
-/**
- * UI Messages - Add Payment Messages
- */
-export const MESSAGES = {
-  // ... existing messages ...
-  PAYMENT_VERIFYING: 'Verifying payment...',
-  PAYMENT_SETTLING: 'Settling payment...',
-  PAYMENT_FAILED: 'Payment failed. Please try again.',
-  INSUFFICIENT_BALANCE: 'Insufficient USDC balance.',
-} as const;
-```
-
----
-
-## **Technical Architecture**
-
-```
-User Flow (No Contract Changes):
-1. User selects phrase count (1, 2, or 3)
-2. Fills in phrase inputs
-3. Clicks "Pay & Mint"
-4. Frontend: Generate x402 header via SDK
-5. Frontend: POST /api/x402/verify
-6. Backend: Verify with Onchain.fi
-7. Backend: Store in Supabase, return paymentId
-8. Frontend: Call contract.mintWithCustomPhrases(phrases) - NORMAL MINT
-9. Contract: Mint NFT (no payment verification in contract)
-10. Frontend: On success, call /api/x402/settle with tokenId + txHash
-11. Backend: Settle payment with Onchain.fi
-12. Backend: Update Supabase with tokenId + status
-13. User receives NFT!
-```
-
----
-
-## **Files to Create/Modify**
-
-### **Backend API**
-- ➕ `/app/api/x402/verify/route.ts` - Payment verification (with Farcaster support)
-- ➕ `/app/api/x402/settle/route.ts` - Payment settlement
-- ➕ `/app/api/x402/update-mint-status/route.ts` - Update mint status tracking
-- ➕ `/app/api/x402/history/route.ts` - Payment history (wallet or FID)
-- ➕ `/app/api/x402/farcaster-stats/route.ts` - Farcaster user statistics
-
-### **Frontend Components**
-- ✏️ `components/CustomMint.tsx` - Add phrase selector + payment + Farcaster context
-- ✏️ `app/page.tsx` - Update mint flow with payment + status tracking
-- ➕ `components/PhraseSelector.tsx` - Phrase count selector
-- ➕ `hooks/useX402Payment.ts` - Payment hook with Farcaster support
-- ➕ `hooks/useFarcasterContext.ts` - Farcaster miniapp context hook
-
-### **Configuration**
-- ✏️ `app/layout.tsx` - Wrap with OnchainConnect
-- ✏️ `lib/config.ts` - Add PAYMENT_CONFIG
-- ✏️ `.env.local` - Add all required env vars
-
-### **Database**
-- ➕ Supabase table: `payment_transactions` (with Farcaster fields)
-- ➕ Supabase view: `farcaster_users_stats` (aggregated stats)
-
-### **Farcaster Miniapp Integration**
-- ➕ `app/frame/route.tsx` - Farcaster Frame metadata
-- ➕ `lib/farcaster.ts` - Farcaster SDK utilities
-- ➕ `types/farcaster.ts` - Farcaster type definitions
-
----
-
-## **Testing Strategy**
-
-1. **Supabase Setup**: Create table and test inserts
-2. **API Testing**: Test verify/settle endpoints locally
-3. **Frontend Testing**: Test payment flow on Base Sepolia
-4. **Integration Testing**: Full flow with testnet USDC
-5. **Production**: Deploy to Base mainnet
-
----
-
-## **Security Considerations**
-
-1. ✅ **API keys** stored server-side only (ONCHAIN_API_KEY, SUPABASE_SERVICE_ROLE_KEY)
-2. ✅ **Payment verification** before allowing mint
-3. ✅ **Amount validation** server-side based on phrase count
-4. ✅ **Wallet address validation**
-5. ✅ **Payment tracking** in Supabase for reconciliation
-6. ✅ **No contract changes** - reduces attack surface
-
----
-
-## **Migration Notes from RainbowKit to OnchainConnect**
-
-- Remove `@rainbow-me/rainbowkit` dependency
-- Remove RainbowKit provider from layout
-- Replace with OnchainConnect provider
-- Update wallet connection logic to use Privy
-- Test wallet connections work correctly
-
----
-
-## **Farcaster Miniapp Integration**
-
-### **Detecting Farcaster Context**
-
-Create `hooks/useFarcasterContext.ts`:
-
-```typescript
-'use client';
-
-import { useEffect, useState } from 'react';
-
-interface FarcasterContext {
-  isFarcaster: boolean;
-  fid: number | null;
-  username: string | null;
-}
-
-export function useFarcasterContext(): FarcasterContext {
-  const [context, setContext] = useState<FarcasterContext>({
-    isFarcaster: false,
-    fid: null,
-    username: null,
-  });
-
-  useEffect(() => {
-    // Check if running in Farcaster context
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search);
-      const fid = searchParams.get('fid');
-      const username = searchParams.get('username');
-
-      // Farcaster frames pass context via URL params or window object
-      const isFarcaster = !!fid || !!(window as any).farcaster;
-
-      setContext({
-        isFarcaster,
-        fid: fid ? parseInt(fid) : null,
-        username: username || null,
-      });
-    }
-  }, []);
-
-  return context;
-}
-```
-
-### **Update Payment Hook for Farcaster**
-
-Modify `hooks/useX402Payment.ts` to include Farcaster data:
-
-```typescript
-const verifyPayment = async (
-  phraseCount: number,
-  phrases: string[],
-  walletAddress: string,
-  farcasterContext?: { fid: number | null; username: string | null }
-) => {
-  setIsVerifying(true);
-  try {
-    const amounts = { 1: '0.20', 2: '0.40', 3: '0.30' };
-    const amount = amounts[phraseCount as keyof typeof amounts];
-
-    const paymentHeader = await generatePaymentHeader({
-      amount,
-      token: 'USDC',
-      recipient: process.env.NEXT_PUBLIC_USDC_RECIPIENT_ADDRESS!,
-    });
-
-    // Determine source platform
-    const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';
-
-    const response = await fetch('/api/x402/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paymentHeader,
-        phraseCount,
-        phrases,
-        walletAddress,
-        farcasterFid: farcasterContext?.fid,
-        farcasterUsername: farcasterContext?.username,
-        sourcePlatform,
-      }),
-    });
-
-    // ... rest of the function
-  } finally {
-    setIsVerifying(false);
-  }
-};
-```
-
-### **Update CustomMint Component**
-
-Add Farcaster context to CustomMint:
-
-```typescript
-import { useFarcasterContext } from '@/hooks/useFarcasterContext';
-
-export function CustomMint({ ... }: CustomMintProps) {
-  const farcasterContext = useFarcasterContext();
-  // ... existing code ...
-
-  const handlePayAndMint = async () => {
-    // ... existing validation ...
-
-    try {
-      const { paymentId, paymentHeader } = await verifyPayment(
-        phraseCount,
-        activePhrases,
-        walletAddress,
-        farcasterContext // Pass Farcaster context
-      );
-
-      onMint(paymentId, paymentHeader);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Payment verification failed');
-    }
-  };
-
-  // ... rest of component ...
-}
-```
-
-### **Farcaster Frame Metadata** (Optional)
-
-Create `app/api/frame/route.ts` for Farcaster Frame support:
-
-```typescript
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  const frameMetadata = {
-    version: 'vNext',
-    image: `${process.env.NEXT_PUBLIC_APP_URL}/og_600x400.webp`,
-    buttons: [
-      {
-        label: 'Mint NFT',
-        action: 'link',
-        target: process.env.NEXT_PUBLIC_APP_URL,
+  const handleCheckout = async () => {
+    const result = await pay({
+      to: merchantAddress,
+      amount: cartTotal.toString(),
+      priority: 'speed',
+      onSuccess: (txHash) => {
+        // Mark order as paid
+        fetch('/api/orders/complete', {
+          method: 'POST',
+          body: JSON.stringify({ txHash }),
+        });
       },
-    ],
+    });
   };
 
-  return NextResponse.json(frameMetadata);
+  return (
+    <button onClick={handleCheckout} disabled={isPaying}>
+      {isPaying ? 'Processing...' : `Pay $${cartTotal}`}
+    </button>
+  );
 }
 ```
 
-### **Tracking Benefits**
+---
 
-With Farcaster integration, you can:
+## 🔐 Security Best Practices
 
-1. **Track user behavior** by FID across sessions
-2. **Build leaderboards** of top Farcaster minters
-3. **Reward active users** with airdrops or discounts
-4. **Analyze platform performance** (web vs. Farcaster miniapp)
-5. **Target marketing** to specific Farcaster users
-6. **Social proof** - show "X Farcaster users have minted"
+### 1. Never Expose API Keys in Client Code
 
-### **Example Queries**
+**❌ DON'T:**
+```tsx
+<OnchainConnect
+  privyAppId="clz..."
+  onchainApiKey="hardcoded-key-123"  // NEVER DO THIS
+>
+```
 
-```sql
--- Top Farcaster minters
-SELECT farcaster_username, COUNT(*) as mint_count, SUM(amount_usdc) as total_spent
-FROM payment_transactions
-WHERE farcaster_fid IS NOT NULL AND mint_status = 'minted'
-GROUP BY farcaster_username
-ORDER BY mint_count DESC
-LIMIT 10;
+**✅ DO:**
+```tsx
+<OnchainConnect
+  privyAppId={process.env.NEXT_PUBLIC_PRIVY_APP_ID}
+  onchainApiKey={process.env.NEXT_PUBLIC_API_KEY}
+>
+```
 
--- Platform distribution
-SELECT source_platform, COUNT(*) as count
-FROM payment_transactions
-GROUP BY source_platform;
+### 2. Validate Payments Server-Side
 
--- Success rate by platform
-SELECT
-  source_platform,
-  COUNT(*) as total_attempts,
-  COUNT(*) FILTER (WHERE mint_status = 'minted') as successful,
-  ROUND(100.0 * COUNT(*) FILTER (WHERE mint_status = 'minted') / COUNT(*), 2) as success_rate
-FROM payment_transactions
-GROUP BY source_platform;
+For production apps, always verify payments on your backend:
+
+```typescript
+// app/api/verify-payment/route.ts
+export async function POST(req: Request) {
+  const { txHash } = await req.json();
+  
+  // Verify the transaction actually happened on-chain
+  // Check it matches expected amount/recipient
+  // Then grant access/fulfill order
+  
+  return Response.json({ verified: true });
+}
+```
+
+### 3. Use Environment-Specific Keys
+
+- **Development**: Use testnet and test API keys
+- **Production**: Use mainnet and production API keys
+
+---
+
+## 📱 Responsive Design
+
+All components are mobile-responsive out of the box:
+
+```tsx
+// Wallet button adapts to screen size
+<WalletButton />  // Fixed bottom-left on desktop, top-left on mobile
+
+// Or customize position
+<WalletButton position="inline" />  // Inline with your nav
 ```
 
 ---
 
-## **Next Steps**
+## 🎨 Customization Examples
 
-1. ✅ Install dependencies (`@onchainfi/connect`, `@supabase/supabase-js`)
-2. ✅ Setup Supabase project + create `payment_transactions` table
-3. ✅ Get Onchain.fi API key (https://onchain.fi/get-api-key)
-4. ✅ Get Privy App ID (https://privy.io)
-5. ✅ Add all environment variables to `.env.local`
-6. ✅ Create backend API routes (verify, settle, update-mint-status, history, farcaster-stats)
-7. ✅ Create frontend components (PhraseSelector, updated CustomMint)
-8. ✅ Create hooks (useX402Payment, useFarcasterContext)
-9. ✅ Update layout with OnchainConnect
-10. ✅ Test payment flow on Base Sepolia
-11. ✅ Test Farcaster miniapp integration
-12. ✅ Deploy to production
+### Custom Styled Payment Form
+
+```tsx
+<PaymentForm
+  className="bg-gray-900 p-6 rounded-xl"
+  theme="minimal"
+  buttonText="Send USDC"
+  recipientLabel="Send To"
+  amountLabel="Amount (USD)"
+  showPrioritySelector={true}
+/>
+```
+
+### Custom Wallet Button
+
+```tsx
+<WalletButton
+  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+  position="inline"
+  showCopy={true}
+/>
+```
 
 ---
 
-**Status**: Documentation Complete ✅
-**Ready to implement**: Yes
-**Estimated effort**: 1-2 days implementation
-**Contract changes**: None required ✅
-**Farcaster support**: Full tracking with FID and username ✅
+## 🧩 TypeScript Support
+
+Full type safety out of the box:
+
+```typescript
+import type {
+  OnchainConnectProps,
+  PaymentParams,
+  PaymentResult,
+  PaymentFormProps,
+  BalanceData,
+  TokenConfig,
+} from '@onchainfi/connect';
+
+const handlePay = async (params: PaymentParams): Promise<PaymentResult> => {
+  // Fully typed!
+};
+```
+
+---
+
+## 🆘 Need Help?
+
+- **Email**: dev@onchain.fi
+- **Docs**: [onchain.fi/docs](https://onchain.fi/docs)
+- **GitHub Issues**: [github.com/onchainfi/connect/issues](https://github.com/onchainfi/connect/issues)
+- **Examples**: See `examples/` folder in the repo
+
+---
+
+## 📦 What's Included
+
+| Component | Description |
+|-----------|-------------|
+| `<OnchainConnect>` | Provider wrapper (required) |
+| `<WalletButton>` | Wallet connection UI |
+| `<PaymentForm>` | Full payment form |
+| `<PaymentButton>` | One-click payment |
+| `<BalanceDisplay>` | Token balance display |
+| `<TransactionHistory>` | Payment history |
+
+| Hook | Purpose |
+|------|---------|
+| `useOnchainWallet()` | Wallet state (address, connection) |
+| `useOnchainPay()` | Execute payments |
+| `useBalance()` | Token balance |
+| `usePaymentHistory()` | Payment history |
+| `useNetworkStatus()` | Facilitator health |
+
+---
+
+## ✅ Integration Checklist
+
+Before going to production:
+
+- [ ] Installed `@onchainfi/connect`
+- [ ] Got Privy App ID
+- [ ] Got Onchain API Key
+- [ ] Set environment variables
+- [ ] Wrapped app with `<OnchainConnect>`
+- [ ] Added Tailwind content path
+- [ ] Tested wallet connection (email, social, external)
+- [ ] Tested payment flow end-to-end
+- [ ] Implemented error handling
+- [ ] Added analytics/logging
+- [ ] Tested on mobile devices
+- [ ] Set up production API keys (not dev keys)
+
+---
+
+**Ready to ship!** 🚀
+
+For more details, see the [full README](./README.md) and [API documentation](https://onchain.fi/docs).

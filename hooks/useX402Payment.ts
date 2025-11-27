@@ -15,19 +15,18 @@ import type {
   FarcasterContext,
   MintStatus,
   PaymentVerifyResponse,
-  PaymentSettleResponse,
   UpdateMintStatusResponse,
 } from '@/types/x402';
 
 /**
  * X402 Payment Hook
- * Handles payment verification, settlement, and status updates with Onchain.fi
+ * Handles payment verification and status updates with Onchain.fi SDK
  * Includes Farcaster miniapp support
  *
- * Correct payment flow for custom mint:
- * 1. verify() - User signs EIP-712 authorization (no funds move)
- * 2. settle() - Payment transferred via Onchain.fi (BEFORE mint)
- * 3. mint() - On-chain NFT mint (after payment secured)
+ * Payment flow for custom mint:
+ * 1. verifyPayment() - SDK verify + auto-settle (user signs, funds transfer)
+ * 2. settlePayment() - Just updates DB status (SDK already settled)
+ * 3. mint() - On-chain NFT mint
  * 4. recordMintSuccess() - Update DB with tokenId + txHash
  */
 export function useX402Payment(): UseX402PaymentResult {
@@ -35,8 +34,8 @@ export function useX402Payment(): UseX402PaymentResult {
   const [isSettling, setIsSettling] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Use OnchainConnect's two-step payment hook
-  const { verify, settle, isVerifying: sdkIsVerifying, isSettling: sdkIsSettling } = useOnchainPay();
+  // Use OnchainConnect SDK - verify() auto-settles by default
+  const { verify } = useOnchainPay();
 
   /**
    * Verify payment with Onchain.fi before minting
@@ -82,23 +81,29 @@ export function useX402Payment(): UseX402PaymentResult {
         throw new Error(verifyResult.error || 'Payment verification failed');
       }
 
-      // The SDK returns an x402 header after user signs
-      const paymentHeader = verifyResult.x402Header || 'SDK_GENERATED_HEADER';
-      console.log('[useX402Payment] paymentHeader after assignment:', paymentHeader);
+      // Get paymentId and x402Header from SDK result
+      const sdkPaymentId = verifyResult.paymentId;
+      const paymentHeader = verifyResult.x402Header;
 
-      // Warn if using fallback (likely invalid)
-      if (!verifyResult.x402Header) {
-        console.warn('[useX402Payment] WARNING: x402Header is missing from SDK response! Using fallback.')
+      // Validate SDK response
+      if (!sdkPaymentId) {
+        throw new Error('SDK did not return paymentId');
       }
+      if (!paymentHeader) {
+        throw new Error('SDK did not return x402Header');
+      }
+
+      console.log('[useX402Payment] SDK paymentId:', sdkPaymentId);
 
       // Determine source platform
       const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';
 
-      // Step 2: Store payment details in our database via API
+      // Step 2: Store payment details in Supabase via API (no Onchain.fi call)
       const response = await fetch('/api/x402/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          paymentId: sdkPaymentId, // Pass SDK's paymentId
           paymentHeader,
           phraseCount,
           phrases,
@@ -112,13 +117,13 @@ export function useX402Payment(): UseX402PaymentResult {
       const data: PaymentVerifyResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error((data as any).error || 'Payment verification failed');
+        throw new Error((data as any).error || 'Failed to store payment');
       }
 
-      console.log('[useX402Payment] Payment verified:', data.paymentId);
+      console.log('[useX402Payment] Payment stored in DB:', sdkPaymentId);
 
       return {
-        paymentId: data.paymentId,
+        paymentId: sdkPaymentId,
         transactionId: data.transactionId,
         paymentHeader,
       };
@@ -131,49 +136,36 @@ export function useX402Payment(): UseX402PaymentResult {
   };
 
   /**
-   * Settle payment BEFORE minting
-   * This transfers funds via Onchain.fi SDK
-   * Must be called after verify() and before mint()
+   * Update settlement status in DB
+   * SDK verify() already auto-settles - this just updates Supabase
    */
   const settlePayment = async (
     paymentId: string,
-    paymentHeader: string
+    _paymentHeader: string // Keep param for interface compatibility
   ) => {
     setIsSettling(true);
     try {
-      console.log('[useX402Payment] Settling payment (pre-mint):', {
-        paymentId,
-      });
+      console.log('[useX402Payment] Updating settled status:', { paymentId });
 
-      // Step 1: Settle via OnchainConnect SDK
-      // This completes the payment on-chain
-      const settleResult = await settle();
-
-      if (!settleResult.success) {
-        throw new Error('Payment settlement failed');
-      }
-
-      // Step 2: Update our database with settlement status
-      const response = await fetch('/api/x402/settle', {
+      // SDK verify() already settled via autoSettle=true
+      // Just update Supabase status
+      const response = await fetch('/api/x402/update-mint-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentId,
-          paymentHeader,
-          mintStatus: 'settled', // Payment secured, ready to mint
+          mintStatus: 'settled',
         }),
       });
 
-      const data: PaymentSettleResponse = await response.json();
-
       if (!response.ok) {
-        throw new Error((data as any).error || 'Payment settlement failed');
+        console.warn('[useX402Payment] Failed to update DB status to settled');
       }
 
-      console.log('[useX402Payment] Payment settled successfully - ready to mint');
+      console.log('[useX402Payment] Payment settled - ready to mint');
     } catch (error) {
-      console.error('[useX402Payment] Settlement error:', error);
-      throw error;
+      console.error('[useX402Payment] Settlement status update error:', error);
+      // Don't throw - settlement already happened via SDK, this is just DB tracking
     } finally {
       setIsSettling(false);
     }

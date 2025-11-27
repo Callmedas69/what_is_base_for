@@ -69,7 +69,7 @@ export function ShareButtons({
   };
 
   const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
-  const buttonSize = size === "lg" ? "h-10 w-10" : size === "sm" ? "p-2" : "p-2.5";
+  const buttonSize = size === "lg" ? "h-10 w-10" : size === "sm" ? "h-10 w-10" : "h-11 w-11";
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
