@@ -10,6 +10,8 @@ interface MintSectionProps {
   mintType: "regular" | "custom" | null;
   phrases: string[];
   alreadyMintedRegular: boolean;
+  regularMintedCount: number;
+  maxRegularMints: number;
   remainingCustomMints: number;
   isPaused: boolean;
   isSoldOut: boolean;
@@ -25,6 +27,8 @@ export function MintSection({
   mintType,
   phrases,
   alreadyMintedRegular,
+  regularMintedCount,
+  maxRegularMints,
   remainingCustomMints,
   isPaused,
   isSoldOut,
@@ -44,6 +48,8 @@ export function MintSection({
           alreadyMinted={alreadyMintedRegular}
           isPaused={isPaused}
           isSoldOut={isSoldOut}
+          mintedCount={regularMintedCount}
+          maxMints={maxRegularMints}
           onMint={onRegularMint}
         />
       </FarcasterGate>
@@ -59,6 +65,7 @@ export function MintSection({
         isPaused={isPaused}
         isSoldOut={isSoldOut}
         walletAddress={walletAddress}
+        remainingMints={remainingCustomMints}
         onPhrasesChange={onPhrasesChange}
         onMint={onCustomMint}
       />

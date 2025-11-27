@@ -15,7 +15,10 @@ export function Header() {
   const { displayText: taglineText, scramble: scrambleTagline } = useScrambleText(TAGLINE, 600);
   const scrambleLogoRef = useRef(scrambleLogo);
   const scrambleTaglineRef = useRef(scrambleTagline);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth < 640;
+  });
 
   // Detect mobile
   useEffect(() => {

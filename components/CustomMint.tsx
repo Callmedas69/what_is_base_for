@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useBalance } from "wagmi";
+import { parseUnits } from "viem";
 import { PHRASE_CONFIG, MESSAGES, PAYMENT_CONFIG } from "@/lib/config";
 import { PhraseSelector } from "./PhraseSelector";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import type { PhraseCount } from "@/types/x402";
+
+// USDC on Base Mainnet
+const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
 
 interface CustomMintProps {
   isConnected: boolean;
@@ -14,6 +19,7 @@ interface CustomMintProps {
   isPaused: boolean;
   isSoldOut: boolean;
   walletAddress?: string;
+  remainingMints: number;
   onPhrasesChange: (phrases: string[]) => void;
   onMint: (paymentData: { paymentId: string; paymentHeader: string }) => void;
 }
@@ -26,6 +32,7 @@ export function CustomMint({
   isPaused,
   isSoldOut,
   walletAddress,
+  remainingMints,
   onPhrasesChange,
   onMint,
 }: CustomMintProps) {
@@ -38,6 +45,21 @@ export function CustomMint({
   const clientConnected = mounted && isConnected;
 
   const { verifyPayment, settlePayment, updateMintStatus, isVerifying, isSettling } = useX402Payment();
+
+  // Check USDC balance
+  const { data: usdcBalance } = useBalance({
+    address: walletAddress as `0x${string}` | undefined,
+    token: USDC_ADDRESS,
+    query: {
+      enabled: !!walletAddress && clientConnected,
+    },
+  });
+
+  // Calculate if user has enough USDC
+  const currentPrice = PAYMENT_CONFIG.PRICES[phraseCount];
+  const requiredAmount = parseUnits(currentPrice, 6); // USDC has 6 decimals
+  const hasEnoughBalance = usdcBalance?.value ? usdcBalance.value >= requiredAmount : false;
+  const insufficientBalance = !!(clientConnected && walletAddress && !hasEnoughBalance);
 
   const handlePhraseChange = (index: number, value: string) => {
     const newPhrases = [...phrases];
@@ -58,6 +80,11 @@ export function CustomMint({
 
     if (isSoldOut) {
       alert("Collection is sold out!");
+      return;
+    }
+
+    if (remainingMints <= 0) {
+      alert("You've reached the maximum custom mints (20/20)");
       return;
     }
 
@@ -127,8 +154,8 @@ export function CustomMint({
     }
   };
 
-  const currentPrice = PAYMENT_CONFIG.PRICES[phraseCount];
-  const isDisabled = !clientConnected || isProcessing || isVerifying || isSettling || isPaused || isSoldOut;
+  const maxedOut = remainingMints <= 0;
+  const isDisabled = !clientConnected || isProcessing || isVerifying || isSettling || isPaused || isSoldOut || maxedOut || insufficientBalance;
 
   return (
     <div className="space-y-4">
@@ -138,7 +165,7 @@ export function CustomMint({
           CUSTOM MINT
         </h3>
         <p className="text-sm md:text-xs text-[#5b616e] italic">
-          your phrases • {currentPrice} USDC
+          your phrases • {currentPrice} USDC {clientConnected && `(${remainingMints} remaining)`}
         </p>
       </div>
 
@@ -187,6 +214,10 @@ export function CustomMint({
           ? "Paused"
           : isSoldOut
           ? "Sold Out"
+          : maxedOut
+          ? "Max Reached"
+          : insufficientBalance
+          ? MESSAGES.INSUFFICIENT_BALANCE
           : `Pay ${currentPrice} USDC & Mint`}
       </button>
 

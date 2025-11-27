@@ -8,14 +8,13 @@
 
 import { OnchainConnect } from "@onchainfi/connect";
 import { NeynarContextProvider, Theme } from "@neynar/react";
-import { base, baseSepolia } from "wagmi/chains";
+import { base } from "wagmi/chains";
 import { CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
 import { AudioProvider } from "@/hooks/useAudio";
 
-// Map chainId to wagmi chain object
+// Map chainId to wagmi chain object (Base Mainnet only)
 const CHAIN_MAP = {
   8453: base,
-  84532: baseSepolia,
 } as const;
 
 export function Providers({ children }: { children: React.ReactNode }) {

@@ -10,6 +10,8 @@ interface RegularMintProps {
   alreadyMinted: boolean;
   isPaused: boolean;
   isSoldOut: boolean;
+  mintedCount: number;
+  maxMints: number;
   onMint: () => void;
 }
 
@@ -20,8 +22,11 @@ export function RegularMint({
   alreadyMinted,
   isPaused,
   isSoldOut,
+  mintedCount,
+  maxMints,
   onMint,
 }: RegularMintProps) {
+  const remainingMints = maxMints - mintedCount;
   // Prevent hydration mismatch - treat as not connected on server
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -38,7 +43,7 @@ export function RegularMint({
           FREE MINT
         </h3>
         <p className="italic text-sm md:text-xs text-[#5b616e]">
-          pre-defined phrases
+          pre-defined phrases {clientConnected && `(${remainingMints}/${maxMints} remaining)`}
         </p>
       </div>
       <button

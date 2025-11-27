@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useOnchainPay } from '@onchainfi/connect';
 import { PAYMENT_CONFIG, CURRENT_NETWORK } from '@/lib/config';
 
-// Map config network names to API network names
+// Map config network names to API network names (Base Mainnet only)
 const NETWORK_API_NAMES: Record<string, string> = {
-  baseSepolia: 'base-sepolia',
+  baseMainnet: 'base',
   base: 'base',
 } as const;
 import type {
@@ -60,7 +60,7 @@ export function useX402Payment(): UseX402PaymentResult {
         hasFarcasterContext: !!farcasterContext?.fid,
       });
 
-      // Get API network name (e.g., "base-sepolia" instead of "baseSepolia")
+      // Get API network name (e.g., "base" for Base Mainnet)
       const networkName = NETWORK_API_NAMES[CURRENT_NETWORK] || 'base';
 
       // Step 1: Use OnchainConnect SDK to verify payment

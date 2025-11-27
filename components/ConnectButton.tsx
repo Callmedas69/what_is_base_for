@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePrivy, useLogin, useLogout } from "@privy-io/react-auth";
-import { useAccount, useDisconnect, useConnect } from "wagmi";
+import { useAccount, useDisconnect, useConnect, useChainId, useSwitchChain } from "wagmi";
 import { IconWallet, IconX, IconCopy, IconCheck } from "@tabler/icons-react";
+import { CHAIN_CONFIG } from "@/lib/config";
 
 interface ConnectButtonProps {
   className?: string;
@@ -19,9 +20,18 @@ export function ConnectButton({ className }: ConnectButtonProps) {
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { connectors, connect, isPending } = useConnect();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
 
   const displayAddress = user?.wallet?.address || wagmiAddress;
   const isConnected = authenticated || wagmiConnected;
+
+  // Auto-switch to Base Mainnet if connected on wrong chain
+  useEffect(() => {
+    if (isConnected && chainId && chainId !== CHAIN_CONFIG.CHAIN_ID) {
+      switchChain({ chainId: CHAIN_CONFIG.CHAIN_ID });
+    }
+  }, [isConnected, chainId, switchChain]);
 
   const handleFarcasterLogin = () => {
     login({ loginMethods: ["farcaster"] });

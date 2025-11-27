@@ -19,6 +19,8 @@ import { MintSection } from "@/components/MintSection";
 import { SuccessModal } from "@/components/SuccessModal";
 import { FloatingDock, DockItem } from "@/components/ui/floating-dock";
 import { ProfileBadge } from "@/components/ProfileBadge";
+import { PendingMintsBanner } from "@/components/PendingMintsBanner";
+import { usePendingMints, type PendingMint } from "@/hooks/usePendingMints";
 
 const SHARE_TEXT = "What is Base means for you?";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
@@ -50,9 +52,11 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     paymentId: string;
     paymentHeader: string;
   } | null>(null);
+  const [retryingMint, setRetryingMint] = useState<PendingMint | null>(null);
 
   const { data: hash, writeContract, isPending } = useWriteContract();
   const { recordMintSuccess, updateMintStatus } = useX402Payment();
+  const { pendingMints, refetch: refetchPendingMints } = usePendingMints(address);
 
   const {
     data: receipt,
@@ -104,8 +108,9 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   });
 
   // Validation state
-  const alreadyMintedRegular = regularMinted >= BigInt(MINT_LIMITS.MAX_REGULAR_MINT);
-  const remainingCustomMints = Number(BigInt(MINT_LIMITS.MAX_CUSTOM_MINT) - customMinted);
+  const regularMintedCount = Number(regularMinted);
+  const alreadyMintedRegular = regularMintedCount >= MINT_LIMITS.MAX_REGULAR_MINT;
+  const remainingCustomMints = MINT_LIMITS.MAX_CUSTOM_MINT - Number(customMinted);
   const isSoldOut = maxSupply > 0n && totalSupply >= maxSupply;
 
   // URL constants for dock items
@@ -218,6 +223,45 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     });
   };
 
+  // Handle retry mint - for failed mints that were already paid
+  const handleRetryMint = async (pendingMint: PendingMint) => {
+    if (isPaused) {
+      alert("Minting is currently paused. Please try again later.");
+      return;
+    }
+    if (isSoldOut) {
+      alert("Collection is sold out!");
+      return;
+    }
+
+    setRetryingMint(pendingMint);
+    setPaymentData({
+      paymentId: pendingMint.paymentId,
+      paymentHeader: '', // Not needed for retry
+    });
+
+    // Update status to minting
+    try {
+      await updateMintStatus(pendingMint.paymentId, "minting");
+    } catch (error) {
+      console.error(`${logPrefix} Failed to update mint status:`, error);
+    }
+
+    // Use phrases from the pending mint (already wrapped from original mint)
+    const phrase1 = pendingMint.phrases[0] || "";
+    const phrase2 = pendingMint.phrases[1] || "";
+    const phrase3 = pendingMint.phrases[2] || "";
+
+    console.log(`${logPrefix} Retrying mint for payment:`, pendingMint.paymentId);
+    setMintType("custom");
+    writeContract({
+      address: CONTRACTS.BASEFOR,
+      abi: BASEFOR_ABI,
+      functionName: "mintWithCustomPhrases",
+      args: [phrase1, phrase2, phrase3],
+    });
+  };
+
   // Handle mint success - Step 4: Record mint in database
   useEffect(() => {
     if (!receipt || !isSuccess) return;
@@ -288,6 +332,9 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     setMintedTokenId(null);
     setAnimationUrl("");
     setPaymentData(null);
+    setRetryingMint(null);
+    // Refetch pending mints in case a retry succeeded
+    refetchPendingMints();
   };
 
   const isProcessing = isPending || isConfirming;
@@ -312,12 +359,23 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
 
             <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start">
               <div className="w-full max-w-md space-y-6">
+                {/* Pending mints banner - show if user has failed mints to retry */}
+                {pendingMints.length > 0 && (
+                  <PendingMintsBanner
+                    pendingMints={pendingMints}
+                    isRetrying={!!retryingMint && isProcessing}
+                    onRetry={handleRetryMint}
+                  />
+                )}
+
                 <MintSection
                   isConnected={isConnected}
                   isProcessing={isProcessing}
                   mintType={mintType}
                   phrases={phrases}
                   alreadyMintedRegular={alreadyMintedRegular}
+                  regularMintedCount={regularMintedCount}
+                  maxRegularMints={MINT_LIMITS.MAX_REGULAR_MINT}
                   remainingCustomMints={remainingCustomMints}
                   isPaused={isPaused}
                   isSoldOut={isSoldOut}

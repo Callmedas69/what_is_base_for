@@ -2,7 +2,7 @@
  * Basefor NFT Contract ABI
  *
  * Generated from compiled Solidity contract
- * Deployed on Base Mainnet & Base Sepolia with 100% FREE MINTING (no payment required)
+ * Deployed on Base Mainnet with 100% FREE MINTING (no payment required)
  * Last updated: 2025-11-26
  *
  * Latest Features:
