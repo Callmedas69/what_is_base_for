@@ -31,7 +31,9 @@
       "Bash(find:*)",
       "Bash(ren:*)",
       "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\components\\ConnectButton.tsx\")",
-      "WebFetch(domain:wagmi.sh)"
+      "WebFetch(domain:wagmi.sh)",
+      "Bash(dir /b \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\node_modules\\@onchainfi\\connect\\dist\")",
+      "WebFetch(domain:docs.farcaster.xyz)"
     ],
     "deny": [],
     "ask": []

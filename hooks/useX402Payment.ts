@@ -208,7 +208,7 @@ export function useX402Payment(): UseX402PaymentResult {
   };
 
   /**
-   * Update mint status during the minting process
+   * Update mint status: 'minted' (success) or 'failed' (can retry)
    */
   const updateMintStatus = async (
     paymentId: string,

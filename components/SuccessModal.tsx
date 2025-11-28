@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CONTRACTS, CHAIN_CONFIG } from "@/lib/config";
@@ -26,13 +26,24 @@ export function SuccessModal({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // Decode SVG for iframe display (animated SVG support)
+  const svgHtml = useMemo(() => {
+    if (!imageUrl?.startsWith("data:image/svg+xml;base64,")) return null;
+    try {
+      const svgContent = atob(imageUrl.split(",")[1]);
+      return `<!DOCTYPE html><html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}</style></head><body>${svgContent}</body></html>`;
+    } catch {
+      return null;
+    }
+  }, [imageUrl]);
+
   const tokenIdString = tokenId.toString();
   const contractAddress = CONTRACTS.BASEFOR;
 
   // URLs
   const openSeaUrl = `https://opensea.io/assets/base/${contractAddress}/${tokenIdString}`;
   const txUrl = `${CHAIN_CONFIG.BASESCAN}/tx/${hash}`;
-  const nftUrl = `${CHAIN_CONFIG.BASESCAN}/nft/${contractAddress}/${tokenIdString}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
   const shareText = `What is Base for?`;
 
   // Handle external link clicks - use SDK in MiniApp, regular link in web
@@ -44,7 +55,7 @@ export function SuccessModal({
     }
   };
 
-  const showFallback = !imageUrl || imageError;
+  const showFallback = !imageUrl || imageError || (!svgHtml && !imageUrl);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -70,6 +81,13 @@ export function SuccessModal({
                 <span className="text-3xl font-bold text-[#0000ff]">#{tokenIdString}</span>
                 <span className="mt-1 text-xs text-[#5b616e]">BaseFor NFT</span>
               </div>
+            ) : svgHtml ? (
+              <iframe
+                srcDoc={svgHtml}
+                title={`NFT #${tokenIdString}`}
+                sandbox="allow-scripts allow-same-origin"
+                className="aspect-square w-full border-none"
+              />
             ) : (
               <>
                 {!imageLoaded && (
@@ -78,7 +96,7 @@ export function SuccessModal({
                   </div>
                 )}
                 <Image
-                  src={imageUrl}
+                  src={imageUrl!}
                   alt={`NFT #${tokenIdString}`}
                   width={400}
                   height={400}
@@ -118,7 +136,7 @@ export function SuccessModal({
             </button>
             <ShareButtons
               text={shareText}
-              url={nftUrl}
+              url={appUrl}
               imageUrl={imageUrl}
               size="sm"
             />

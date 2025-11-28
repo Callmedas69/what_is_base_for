@@ -242,13 +242,6 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
 
     setPaymentData(payment);
 
-    // Update status to minting
-    try {
-      await updateMintStatus(payment.paymentId, "minting");
-    } catch (error) {
-      console.error(`${logPrefix} Failed to update mint status:`, error);
-    }
-
     // Wrap phrases with curly braces for contract (lowercase for consistency)
     const wrappedPhrase1 = phrases[0] ? `[${phrases[0].toLowerCase()}]` : "";
     const wrappedPhrase2 = phrases[1] ? `[${phrases[1].toLowerCase()}]` : "";
@@ -287,17 +280,10 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
       paymentHeader: '', // Not needed for retry
     });
 
-    // Update status to minting
-    try {
-      await updateMintStatus(pendingMint.paymentId, "minting");
-    } catch (error) {
-      console.error(`${logPrefix} Failed to update mint status:`, error);
-    }
-
     // Wrap phrases with brackets (same as handleCustomMint)
-    const phrase1 = pendingMint.phrases[0] ? `[${pendingMint.phrases[0].toLowerCase()}]` : "";
-    const phrase2 = pendingMint.phrases[1] ? `[${pendingMint.phrases[1].toLowerCase()}]` : "";
-    const phrase3 = pendingMint.phrases[2] ? `[${pendingMint.phrases[2].toLowerCase()}]` : "";
+    const phrase1 = pendingMint.phrases[0] ? `[${pendingMint.phrases[0].toUpperCase()}]` : "";
+    const phrase2 = pendingMint.phrases[1] ? `[${pendingMint.phrases[1].toUpperCase()}]` : "";
+    const phrase3 = pendingMint.phrases[2] ? `[${pendingMint.phrases[2].toUpperCase()}]` : "";
 
     console.log(`${logPrefix} Retrying mint for payment:`, pendingMint.paymentId);
     setMintType("custom");
@@ -396,14 +382,17 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     handleMintFailure();
   }, [isWriteError, isReceiptError, writeError, receiptError, paymentData, mintType, updateMintStatus, refetchPendingMints, resetWrite, logPrefix]);
 
-  // Parse tokenURI for image
+  // Parse tokenURI for animation_url (animated SVG)
   useEffect(() => {
     if (!tokenURI || typeof tokenURI !== "string") return;
 
     try {
       const base64Data = tokenURI.split(",")[1];
       const jsonData = JSON.parse(atob(base64Data));
-      if (jsonData.image) {
+      // Use animation_url for animated SVG, fallback to image
+      if (jsonData.animation_url) {
+        setAnimationUrl(jsonData.animation_url);
+      } else if (jsonData.image) {
         setAnimationUrl(jsonData.image);
       }
     } catch (error) {

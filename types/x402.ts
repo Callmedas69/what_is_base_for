@@ -5,7 +5,7 @@
 
 // Payment Status Types
 export type PaymentStatus = 'pending' | 'verified' | 'settled' | 'failed';
-export type MintStatus = 'not_started' | 'minting' | 'minted' | 'failed';
+export type MintStatus = 'minted' | 'failed';
 export type SourcePlatform = 'web' | 'farcaster_miniapp' | 'mobile';
 export type PhraseCount = 1 | 2 | 3;
 

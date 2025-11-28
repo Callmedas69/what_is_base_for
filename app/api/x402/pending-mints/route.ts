@@ -30,13 +30,11 @@ export async function GET(req: NextRequest) {
 
     console.log('[x402/pending-mints] Fetching for wallet:', walletAddress.slice(0, 10) + '...');
 
-    // Query for settled payments with failed mints
+    // Query pending_mints VIEW (settled payments with failed mints)
     const { data, error } = await supabase
-      .from('payment_transactions')
+      .from('pending_mints')
       .select('*')
       .eq('wallet_address', walletAddress)
-      .eq('payment_status', 'settled')
-      .eq('mint_status', 'failed')
       .order('created_at', { ascending: false });
 
     if (error) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
-import { BalanceDisplay, WalletButton } from "@onchainfi/connect";
+import { CustomWalletConnect } from "@/components/wallet/CustomWalletConnect";
 import { APP_CONFIG } from "@/lib/config";
 import { useAudio } from "@/hooks/useAudio";
 import { useScrambleText } from "@/hooks/useScrambleText";
@@ -73,9 +73,7 @@ export function Header() {
       </button>
 
       {/* Right: Wallet */}
-      <div className="wallet-button-container">
-        <WalletButton position="inline" />
-      </div>
+      <CustomWalletConnect className="px-4 py-2 rounded-lg bg-[#0a0b0d] text-white font-semibold hover:bg-gray-800 transition" />
     </header>
   );
 }

@@ -12,13 +12,9 @@ const supabase = createClient(
  * POST /api/x402/update-mint-status
  * Updates mint status for a payment transaction
  *
- * Flow: verify → settle → mint → update-mint-status
- * This endpoint handles step 3 (minting) and step 4 (minted/failed)
- *
- * Status transitions:
- * - "minting": Mint transaction submitted
+ * Status values:
  * - "minted": Mint confirmed, includes tokenId + txHash
- * - "failed": Mint or payment failed, includes error details
+ * - "failed": Not minted (can retry without paying again)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -35,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate mint status
-    const validStatuses = ['not_started', 'minting', 'minted', 'failed'];
+    const validStatuses = ['minted', 'failed'];
     if (!validStatuses.includes(mintStatus)) {
       return NextResponse.json(
         { error: `Invalid mint status. Must be one of: ${validStatuses.join(', ')}` },
@@ -58,11 +54,8 @@ export async function POST(req: NextRequest) {
     };
 
     // Add timestamp and data based on status
-    if (mintStatus === 'minting') {
-      updateData.minting_started_at = new Date().toISOString();
-    } else if (mintStatus === 'minted') {
+    if (mintStatus === 'minted') {
       updateData.minted_at = new Date().toISOString();
-      // Record NFT details when minted
       if (tokenId) updateData.token_id = tokenId;
       if (txHash) updateData.tx_hash = txHash;
     } else if (mintStatus === 'failed') {
