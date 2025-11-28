@@ -36,14 +36,12 @@ export function Header() {
 
   // Sequential scramble: logo first, tagline follows
   const triggerScramble = () => {
-    if (isMobile) return;
     scrambleLogoRef.current();
     setTimeout(() => scrambleTaglineRef.current(), 300);
   };
 
-  // Auto-scramble on mount and every 7 seconds (desktop only)
+  // Auto-scramble on mount and every 7 seconds
   useEffect(() => {
-    if (isMobile) return;
     triggerScramble();
     const interval = setInterval(triggerScramble, 7000);
     return () => clearInterval(interval);
@@ -51,12 +49,12 @@ export function Header() {
 
   return (
     <header className="relative z-10 flex flex-row items-center justify-between gap-4 border-b border-[#dee1e7] bg-white px-4 sm:px-6 py-4">
-      {/* Left: Logo */}
-      <div className="flex flex-col gap-1 cursor-pointer" onMouseEnter={triggerScramble} onClick={triggerScramble}>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0a0b0d] tracking-tight">
+      {/* Left: Logo - min-w prevents shifting during scramble */}
+      <div className="flex flex-col gap-1 cursor-pointer min-w-[100px] sm:min-w-[140px]" onMouseEnter={triggerScramble} onClick={triggerScramble}>
+        <h1 className="text-2xl sm:text-2xl lg:text-3xl font-extrabold text-[#0a0b0d] tracking-tight">
           {logoText}
         </h1>
-        <p className="hidden sm:block text-base lg:text-sm text-[#5b616e] font-mono font-extrabold uppercase leading-tight">
+        <p className="text-xs sm:block lg:text-sm text-[#5b616e] font-mono font-extrabold uppercase leading-tight">
           {taglineText}
         </p>
       </div>
@@ -64,16 +62,16 @@ export function Header() {
       {/* Center: Play Button */}
       <button
         onClick={togglePlay}
-        className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#dee1e7] bg-white hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2 px-2 py-2 rounded-full border border-[#dee1e7] bg-white hover:bg-gray-50 transition-colors"
       >
         {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
         <span className="hidden sm:inline text-sm font-medium text-[#0a0b0d]">
-          {isPlaying ? "Pause" : "Play Music"}
+          {isPlaying ? "Pause" : "Play"}
         </span>
       </button>
 
       {/* Right: Wallet */}
-      <CustomWalletConnect className="px-4 py-2 rounded-lg bg-[#0a0b0d] text-white font-semibold hover:bg-gray-800 transition" />
+      <CustomWalletConnect className="p-2 text-[#0a0b0d] hover:text-gray-600 transition" />
     </header>
   );
 }

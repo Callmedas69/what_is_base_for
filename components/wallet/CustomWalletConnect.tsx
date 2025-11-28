@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { sdk } from '@farcaster/miniapp-sdk';
 import { useOnchainWallet } from '@onchainfi/connect';
+import { useDisconnect } from 'wagmi';
+import { Wallet } from 'lucide-react';
 import { useFarcaster } from '@/contexts/FarcasterContext';
 
 interface CustomWalletConnectProps {
@@ -10,41 +11,17 @@ interface CustomWalletConnectProps {
 }
 
 export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
-  const { isFarcaster, isReady } = useFarcaster();
+  // Farcaster wallet from global context (auto-connects in MiniApp)
+  const { isFarcaster, wallet: fcWallet } = useFarcaster();
+  // Privy wallet for web mode
   const { isConnected: privyConnected, address: privyAddress, login, logout } = useOnchainWallet();
+  const { disconnect } = useDisconnect();
 
-  // MiniApp wallet state (only used when isFarcaster)
-  const [fcAddress, setFcAddress] = useState<string | undefined>();
-  const [isConnecting, setIsConnecting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
-  // Auto-connect in MiniApp mode
-  useEffect(() => {
-    if (isFarcaster && isReady && !fcAddress) {
-      connectFarcaster();
-    }
-  }, [isFarcaster, isReady, fcAddress]);
-
-  async function connectFarcaster() {
-    setIsConnecting(true);
-    try {
-      const provider = await sdk.wallet.getEthereumProvider();
-      if (!provider) return;
-
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      if (accounts?.[0]) {
-        setFcAddress(accounts[0]);
-      }
-    } catch (error) {
-      console.error('[CustomWallet] Farcaster connect error:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  }
-
-  // Unified state
-  const isConnected = isFarcaster ? !!fcAddress : privyConnected;
-  const address = isFarcaster ? fcAddress : privyAddress;
+  // Unified state from context
+  const isConnected = isFarcaster ? fcWallet.isConnected : privyConnected;
+  const address = isFarcaster ? fcWallet.address : privyAddress;
 
   function handleClick() {
     if (isConnected) {
@@ -52,9 +29,9 @@ export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
       return;
     }
 
-    if (isFarcaster) {
-      connectFarcaster();
-    } else {
+    // In MiniApp, wallet auto-connects via FarcasterContext
+    // In web, trigger Privy login
+    if (!isFarcaster) {
       login();
     }
   }
@@ -80,10 +57,9 @@ export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
     <div className="relative wallet-menu-container">
       <button
         onClick={handleClick}
-        disabled={isConnecting}
-        className={className || "px-4 py-2 rounded-lg bg-black text-white font-semibold hover:bg-gray-800 transition disabled:opacity-40"}
+        className={className || "p-2 text-[#0a0b0d] hover:text-gray-600 transition"}
       >
-        {isConnecting ? "Connecting..." : isConnected ? short : "Connect Wallet"}
+        <Wallet className="w-5 h-5" strokeWidth={2} />
       </button>
 
       {showMenu && isConnected && (
@@ -91,7 +67,7 @@ export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
           <div className="px-3 py-2 text-sm text-gray-500 border-b">{short}</div>
           {!isFarcaster && (
             <button
-              onClick={() => { logout(); setShowMenu(false); }}
+              onClick={() => { logout(); disconnect(); setShowMenu(false); }}
               className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
             >
               Disconnect

@@ -28,6 +28,13 @@ export interface ComposeCastResult {
   hash?: string;
 }
 
+export interface FarcasterWallet {
+  /** Connected wallet address (null if not connected) */
+  address: string | null;
+  /** True when wallet is connected */
+  isConnected: boolean;
+}
+
 export interface FarcasterActions {
   /**
    * Compose and post a cast to Farcaster
@@ -65,6 +72,9 @@ export interface FarcasterContextValue {
 
   /** Actions for interacting with Farcaster SDK */
   actions: FarcasterActions;
+
+  /** Wallet state for MiniApp (connected via sdk.wallet) */
+  wallet: FarcasterWallet;
 }
 
 /**
@@ -79,5 +89,9 @@ export const defaultFarcasterContext: FarcasterContextValue = {
     composeCast: async () => ({ success: false }),
     openUrl: async () => {},
     ready: () => {},
+  },
+  wallet: {
+    address: null,
+    isConnected: false,
   },
 };

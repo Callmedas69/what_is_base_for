@@ -22,6 +22,7 @@ import { FloatingDock, DockItem } from "@/components/ui/floating-dock";
 import { ProfileBadge } from "@/components/ProfileBadge";
 import { PendingMintsBanner } from "@/components/PendingMintsBanner";
 import { usePendingMints, type PendingMint } from "@/hooks/usePendingMints";
+import { useFarcaster } from "@/contexts/FarcasterContext";
 
 const SHARE_TEXT = "What is Base means for you?";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
@@ -42,8 +43,14 @@ interface HomeContentProps {
  * Only dock items differ based on mode
  */
 export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, logPrefix = "[Home]" }: HomeContentProps) {
-  const { isConnected, address: walletAddress } = useOnchainWallet();
-  const address = walletAddress as `0x${string}` | undefined;
+  // Farcaster context for MiniApp wallet
+  const { isFarcaster, wallet: fcWallet } = useFarcaster();
+  // Privy/Onchain wallet for web mode
+  const { isConnected: privyConnected, address: privyAddress } = useOnchainWallet();
+
+  // Unified connection state: use Farcaster wallet in MiniApp, Privy in web
+  const isConnected = isFarcaster ? fcWallet.isConnected : privyConnected;
+  const address = (isFarcaster ? fcWallet.address : privyAddress) as `0x${string}` | undefined;
 
   // Chain alignment - ensures wallet is on Base network
   const { needsSwitch, promptSwitch, isSwitching } = useChainAlignment('base');
@@ -243,9 +250,9 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     setPaymentData(payment);
 
     // Wrap phrases with curly braces for contract (lowercase for consistency)
-    const wrappedPhrase1 = phrases[0] ? `[${phrases[0].toLowerCase()}]` : "";
-    const wrappedPhrase2 = phrases[1] ? `[${phrases[1].toLowerCase()}]` : "";
-    const wrappedPhrase3 = phrases[2] ? `[${phrases[2].toLowerCase()}]` : "";
+    const wrappedPhrase1 = phrases[0] ? `[${phrases[0].toUpperCase()}]` : "";
+    const wrappedPhrase2 = phrases[1] ? `[${phrases[1].toUpperCase()}]` : "";
+    const wrappedPhrase3 = phrases[2] ? `[${phrases[2].toUpperCase()}]` : "";
 
     console.log(`${logPrefix} Executing on-chain mint...`);
     setMintType("custom");

@@ -15,6 +15,7 @@ import type {
   FarcasterContextValue,
   FarcasterUser,
   FarcasterClient,
+  FarcasterWallet,
   ComposeCastResult,
 } from "@/types/farcaster";
 import { defaultFarcasterContext } from "@/types/farcaster";
@@ -52,6 +53,7 @@ export function FarcasterMiniAppProvider({ children }: FarcasterMiniAppProviderP
   const [isReady, setIsReady] = useState(false);
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [client, setClient] = useState<FarcasterClient | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const readySent = useRef(false);
 
   // Initialize SDK on mount
@@ -109,6 +111,28 @@ export function FarcasterMiniAppProvider({ children }: FarcasterMiniAppProviderP
 
     initFarcaster();
   }, []);
+
+  // Auto-connect wallet in MiniApp mode
+  useEffect(() => {
+    if (!isFarcaster || !isReady || walletAddress) return;
+
+    async function autoConnectWallet() {
+      try {
+        const provider = await sdk.wallet.getEthereumProvider();
+        if (!provider) return;
+
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        if (accounts?.[0]) {
+          setWalletAddress(accounts[0]);
+          console.log('[Farcaster] Wallet auto-connected:', accounts[0].slice(0, 6));
+        }
+      } catch (error) {
+        console.error('[Farcaster] Wallet auto-connect error:', error);
+      }
+    }
+
+    autoConnectWallet();
+  }, [isFarcaster, isReady, walletAddress]);
 
   /**
    * Compose a cast using Farcaster SDK or fallback to URL
@@ -194,6 +218,15 @@ export function FarcasterMiniAppProvider({ children }: FarcasterMiniAppProviderP
     [composeCast, openUrl, ready]
   );
 
+  // Memoize wallet object
+  const wallet = useMemo<FarcasterWallet>(
+    () => ({
+      address: walletAddress,
+      isConnected: !!walletAddress,
+    }),
+    [walletAddress]
+  );
+
   // Memoize entire context value for performance
   const value = useMemo<FarcasterContextValue>(
     () => ({
@@ -202,8 +235,9 @@ export function FarcasterMiniAppProvider({ children }: FarcasterMiniAppProviderP
       user,
       client,
       actions,
+      wallet,
     }),
-    [isFarcaster, isReady, user, client, actions]
+    [isFarcaster, isReady, user, client, actions, wallet]
   );
 
   return (
