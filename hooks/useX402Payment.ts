@@ -29,7 +29,16 @@ export function useX402Payment(): UseX402PaymentResult {
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Use OnchainConnect SDK - pay() handles verify + settle in one step
-  const { pay } = useOnchainPay();
+  const { pay } = useOnchainPay({
+    callbacks: {
+      onSigningStart: () => console.log('[useX402Payment] Opening wallet for signing...'),
+      onSigningComplete: () => console.log('[useX402Payment] Signed!'),
+      onVerificationStart: () => console.log('[useX402Payment] Verifying payment...'),
+      onVerificationComplete: () => console.log('[useX402Payment] Payment verified!'),
+      onSettlementStart: () => console.log('[useX402Payment] Settling payment...'),
+      onSettlementComplete: () => console.log('[useX402Payment] Payment settled!'),
+    },
+  });
 
   /**
    * Process payment with Onchain.fi using one-step pay()
@@ -139,8 +148,8 @@ export function useX402Payment(): UseX402PaymentResult {
   };
 
   /**
-   * Update settlement status in DB
-   * SDK pay() already settled - this just updates Supabase
+   * Settlement confirmation (logging only)
+   * SDK pay() already handles settlement - this is just for debugging
    */
   const settlePayment = async (
     paymentId: string,
@@ -148,26 +157,8 @@ export function useX402Payment(): UseX402PaymentResult {
   ) => {
     setIsSettling(true);
     try {
-      console.log('[useX402Payment] Updating settled status:', { paymentId });
-
-      // SDK pay() already settled - just update Supabase status
-      const response = await fetch('/api/x402/update-mint-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId,
-          mintStatus: 'settled',
-        }),
-      });
-
-      if (!response.ok) {
-        console.warn('[useX402Payment] Failed to update DB status to settled');
-      }
-
-      console.log('[useX402Payment] Payment marked as settled - ready to mint');
-    } catch (error) {
-      console.error('[useX402Payment] Settlement status update error:', error);
-      // Don't throw - payment already succeeded via SDK
+      // SDK pay() already handles settlement - this is just for logging
+      console.log('[useX402Payment] Settlement confirmed (handled by SDK pay()):', { paymentId });
     } finally {
       setIsSettling(false);
     }

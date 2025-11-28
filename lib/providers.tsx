@@ -10,8 +10,9 @@ import { OnchainConnect } from "@onchainfi/connect";
 import { NeynarContextProvider, Theme } from "@neynar/react";
 import { Toaster } from "sonner";
 import { base } from "wagmi/chains";
-import { CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
+import { CHAIN_CONFIG, APP_CONFIG, WALLETCONNECT_PROJECT_ID } from "@/lib/config";
 import { AudioProvider } from "@/hooks/useAudio";
+import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
 
 // Map chainId to wagmi chain object (Base Mainnet only)
 const CHAIN_MAP = {
@@ -27,16 +28,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
       onchainApiKey={process.env.NEXT_PUBLIC_API_KEY!}
       chains={[chain]}
       defaultChain={chain}
+      connectors={[
+        injected(),
+        walletConnect({ projectId: WALLETCONNECT_PROJECT_ID }),
+        coinbaseWallet({ appName: APP_CONFIG.NAME }),
+      ]}
       appearance={{
         theme: "light",
         accentColor: "#0000ff",
         landingHeader: `Connect to ${APP_CONFIG.NAME}`,
         showWalletLoginFirst: true,
       }}
+
+      loginMethods={['wallet']}
       // Wallet only - no social login needed
       // Follow/Recast validation done via Neynar API
+      
       privyConfig={{
-        loginMethods: ['wallet'],
         appearance: {
           theme: 'light',
           accentColor: '#0000ff',

@@ -27,7 +27,7 @@ export function TokenDisplay() {
     }
   }, [error]);
 
-  // Parse tokenURI and decode base64 HTML
+  // Parse tokenURI and decode animation_url (SVG)
   useEffect(() => {
     if (!tokenURI) return;
 
@@ -36,10 +36,14 @@ export function TokenDisplay() {
       const base64Data = tokenURI.split(",")[1];
       const jsonData = JSON.parse(atob(base64Data));
 
-      // Decode base64 HTML from animation_url
-      if (jsonData.animation_url?.startsWith("data:text/html;base64,")) {
-        const htmlContent = atob(jsonData.animation_url.split(",")[1]);
-        setHtml(htmlContent);
+      // Decode base64 SVG from animation_url
+      if (jsonData.animation_url?.startsWith("data:image/svg+xml;base64,")) {
+        const svgContent = atob(jsonData.animation_url.split(",")[1]);
+        // Wrap SVG in HTML for iframe display
+        const htmlWrapper = `<!DOCTYPE html>
+<html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}</style></head>
+<body>${svgContent}</body></html>`;
+        setHtml(htmlWrapper);
       }
     } catch (error) {
       console.error("Error parsing tokenURI:", error);

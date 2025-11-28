@@ -2,8 +2,8 @@
  * Basefor NFT Contract ABI
  *
  * Generated from compiled Solidity contract
- * Deployed on Base Mainnet with 100% FREE MINTING (no payment required)
- * Last updated: 2025-11-26
+ * Deployed on Base Mainnet & Base Sepolia with 100% FREE MINTING (no payment required)
+ * Last updated: 2025-11-28
  *
  * Latest Features:
  * - ERC721Enumerable implementation for full token enumeration support
@@ -27,17 +27,17 @@ export const BASEFOR_ABI = [{ "type": "constructor", "inputs": [{ "name": "_phra
 
 /**
  * Contract deployment addresses across different networks
- * Last updated: 2025-11-26
+ * Last updated: 2025-11-28
  *
  * Basefor: A fully onchain collection of base spirits with 3-phrase animation
  */
 export const CONTRACT_ADDRESSES = {
   baseMainnet: {
     chainId: 8453,
-    basefor: '0x69132F88a80e3f3A0B5E99d9ca8356Ea2834463A', // Main NFT contract (3-phrase system, tiny preview SVG, ERC721Enumerable)
-    assets: '0xe8f723415d8B75e8a497a90DD2eDD8C3F448bB58', // Assets contract (3-phrase CSS)
-    renderer: '0x352bCFf4c1baBf7048fCb63A93cAfab4395b80e9', // Renderer contract (6 params: 3 phrases, 3 colors)
-    phrases: '0x351e12Ee536421a72eA2C1C627788c4Bf4922c5e', // Phrases registry
+    basefor: '0xb276A2A0f963cFE45f786f8F909fc39aff2ae087', // Main NFT contract (3-phrase system, tiny preview SVG, ERC721Enumerable)
+    assets: '0x898c5cEe09822dc89BCca7c7Bc34F994079b0539', // Assets contract (3-phrase CSS)
+    renderer: '0x9496d0CC439647b1C7131C549b1d6EC6b8459b22', // Renderer contract (6 params: 3 phrases, 3 colors)
+    phrases: '0x0938a5307B09fe9F973e72881bC55e172e2D5c1c', // Phrases registry
     initialRecipient: '0x168D8b4f50BB3aA67D05a6937B643004257118ED', // Received initial 20 NFTs + Owner
     explorer: 'https://base.blockscout.com',
     basescan: 'https://basescan.org',

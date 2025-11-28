@@ -27,7 +27,11 @@
       "Bash(npm audit:*)",
       "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\app\\(miniapp)\\FarcasterProvider.tsx\")",
       "Bash(git show:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(find:*)",
+      "Bash(ren:*)",
+      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\components\\ConnectButton.tsx\")",
+      "WebFetch(domain:wagmi.sh)"
     ],
     "deny": [],
     "ask": []

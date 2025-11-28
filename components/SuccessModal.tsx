@@ -30,7 +30,7 @@ export function SuccessModal({
   const contractAddress = CONTRACTS.BASEFOR;
 
   // URLs
-  const openSeaUrl = `https://opensea.io/item/base/${contractAddress}/${tokenIdString}`;
+  const openSeaUrl = `https://opensea.io/assets/base/${contractAddress}/${tokenIdString}`;
   const txUrl = `${CHAIN_CONFIG.BASESCAN}/tx/${hash}`;
   const nftUrl = `${CHAIN_CONFIG.BASESCAN}/nft/${contractAddress}/${tokenIdString}`;
   const shareText = `What is Base for?`;

@@ -7,7 +7,7 @@ import {
   useWaitForTransactionReceipt,
   useReadContract,
 } from "wagmi";
-import { useOnchainWallet } from "@onchainfi/connect";
+import { useOnchainWallet, useChainAlignment } from "@onchainfi/connect";
 import { parseEventLogs } from "viem";
 import { toast } from "sonner";
 import { BASEFOR_ABI } from "@/abi/Basefor.abi";
@@ -44,6 +44,23 @@ interface HomeContentProps {
 export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, logPrefix = "[Home]" }: HomeContentProps) {
   const { isConnected, address: walletAddress } = useOnchainWallet();
   const address = walletAddress as `0x${string}` | undefined;
+
+  // Chain alignment - ensures wallet is on Base network
+  const { needsSwitch, promptSwitch, isSwitching } = useChainAlignment('base');
+  const hasPromptedSwitch = useRef(false);
+
+  // Auto-switch to Base when connected on wrong chain (once per session)
+  useEffect(() => {
+    if (isConnected && needsSwitch && !isSwitching && !hasPromptedSwitch.current) {
+      hasPromptedSwitch.current = true;
+      promptSwitch();
+    }
+    // Reset flag when user disconnects
+    if (!isConnected) {
+      hasPromptedSwitch.current = false;
+    }
+  }, [isConnected, needsSwitch, isSwitching, promptSwitch]);
+
   const [phrases, setPhrases] = useState(["", "", ""]);
   const [mintType, setMintType] = useState<"regular" | "custom" | null>(null);
   const [mintedTokenId, setMintedTokenId] = useState<bigint | null>(null);
@@ -56,7 +73,14 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   const [retryingMint, setRetryingMint] = useState<PendingMint | null>(null);
   const processedReceiptRef = useRef<string | null>(null);
 
-  const { data: hash, writeContract, isPending } = useWriteContract();
+  const {
+    data: hash,
+    writeContract,
+    isPending,
+    error: writeError,
+    isError: isWriteError,
+    reset: resetWrite
+  } = useWriteContract();
   const { recordMintSuccess, updateMintStatus } = useX402Payment();
   const { pendingMints, refetch: refetchPendingMints } = usePendingMints(address);
 
@@ -64,6 +88,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     data: receipt,
     isLoading: isConfirming,
     isSuccess,
+    error: receiptError,
+    isError: isReceiptError,
   } = useWaitForTransactionReceipt({ hash });
 
   // Contract reads
@@ -173,9 +199,15 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   ];
 
   // Handle regular mint
-  const handleRegularMint = () => {
+  const handleRegularMint = async () => {
     if (!isConnected) {
       toast.error(MESSAGES.CONNECT_WALLET);
+      return;
+    }
+    // Check chain alignment - prompt switch if needed
+    if (needsSwitch) {
+      toast.info("Please switch to Base network to mint");
+      await promptSwitch();
       return;
     }
     if (isPaused) {
@@ -201,6 +233,13 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
 
   // Handle custom mint - Step 3: Execute on-chain mint (payment already settled)
   const handleCustomMint = async (payment: { paymentId: string; paymentHeader: string }) => {
+    // Check chain alignment - prompt switch if needed
+    if (needsSwitch) {
+      toast.info("Please switch to Base network to mint");
+      await promptSwitch();
+      return;
+    }
+
     setPaymentData(payment);
 
     // Update status to minting
@@ -211,9 +250,9 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     }
 
     // Wrap phrases with curly braces for contract (lowercase for consistency)
-    const wrappedPhrase1 = phrases[0] ? `{${phrases[0].toLowerCase()}}` : "";
-    const wrappedPhrase2 = phrases[1] ? `{${phrases[1].toLowerCase()}}` : "";
-    const wrappedPhrase3 = phrases[2] ? `{${phrases[2].toLowerCase()}}` : "";
+    const wrappedPhrase1 = phrases[0] ? `[${phrases[0].toLowerCase()}]` : "";
+    const wrappedPhrase2 = phrases[1] ? `[${phrases[1].toLowerCase()}]` : "";
+    const wrappedPhrase3 = phrases[2] ? `[${phrases[2].toLowerCase()}]` : "";
 
     console.log(`${logPrefix} Executing on-chain mint...`);
     setMintType("custom");
@@ -227,6 +266,12 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
 
   // Handle retry mint - for failed mints that were already paid
   const handleRetryMint = async (pendingMint: PendingMint) => {
+    // Check chain alignment - prompt switch if needed
+    if (needsSwitch) {
+      toast.info("Please switch to Base network to mint");
+      await promptSwitch();
+      return;
+    }
     if (isPaused) {
       toast.error("Minting is currently paused. Please try again later.");
       return;
@@ -249,10 +294,10 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
       console.error(`${logPrefix} Failed to update mint status:`, error);
     }
 
-    // Use phrases from the pending mint (already wrapped from original mint)
-    const phrase1 = pendingMint.phrases[0] || "";
-    const phrase2 = pendingMint.phrases[1] || "";
-    const phrase3 = pendingMint.phrases[2] || "";
+    // Wrap phrases with brackets (same as handleCustomMint)
+    const phrase1 = pendingMint.phrases[0] ? `[${pendingMint.phrases[0].toLowerCase()}]` : "";
+    const phrase2 = pendingMint.phrases[1] ? `[${pendingMint.phrases[1].toLowerCase()}]` : "";
+    const phrase3 = pendingMint.phrases[2] ? `[${pendingMint.phrases[2].toLowerCase()}]` : "";
 
     console.log(`${logPrefix} Retrying mint for payment:`, pendingMint.paymentId);
     setMintType("custom");
@@ -315,6 +360,42 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     handleMintSuccess();
   }, [receipt, isSuccess, paymentData, mintType, recordMintSuccess, updateMintStatus, logPrefix]);
 
+  // Handle mint failure - covers both writeContract rejection and tx revert
+  useEffect(() => {
+    // Skip if no payment in progress or not a custom mint
+    if (!paymentData || mintType !== "custom") return;
+
+    // Check for either type of error
+    const hasError = isWriteError || isReceiptError;
+    if (!hasError) return;
+
+    const errorMessage = writeError?.message || receiptError?.message || "Transaction failed";
+
+    const handleMintFailure = async () => {
+      console.error(`${logPrefix} Mint failed:`, errorMessage);
+
+      try {
+        await updateMintStatus(
+          paymentData.paymentId,
+          "failed",
+          errorMessage,
+          isWriteError ? "WRITE_CONTRACT_ERROR" : "TX_REVERTED"
+        );
+        await refetchPendingMints();
+        toast.error("Mint failed. You can retry without paying again.");
+      } catch (err) {
+        console.error(`${logPrefix} Failed to update status:`, err);
+      }
+
+      // Reset states
+      setPaymentData(null);
+      setRetryingMint(null);
+      resetWrite();
+    };
+
+    handleMintFailure();
+  }, [isWriteError, isReceiptError, writeError, receiptError, paymentData, mintType, updateMintStatus, refetchPendingMints, resetWrite, logPrefix]);
+
   // Parse tokenURI for image
   useEffect(() => {
     if (!tokenURI || typeof tokenURI !== "string") return;
@@ -344,7 +425,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     refetchPendingMints();
   };
 
-  const isProcessing = isPending || isConfirming;
+  const isProcessing = isPending || isConfirming || isSwitching;
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-[#0a0b0d]">

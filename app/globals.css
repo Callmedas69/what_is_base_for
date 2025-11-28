@@ -163,6 +163,32 @@
   color: var(--base-gray-100) !important;
 }
 
+/* Mobile: Show only wallet icon, hide address text and copy button */
+@media (max-width: 640px) {
+  .wallet-button-container button {
+    padding: 0.5rem !important;
+    gap: 0 !important;
+  }
+
+  /* Hide address text on mobile */
+  .wallet-button-container button span {
+    display: none !important;
+  }
+
+  /* Hide copy button (nested button) on mobile */
+  .wallet-button-container button button,
+  .wallet-button-container > div > button:not(:first-child) {
+    display: none !important;
+  }
+
+  /* Keep icon visible and sized properly */
+  .wallet-button-container button svg:first-of-type {
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+  }
+}
+
 /* OnchainConnect Modal - ensure it's above everything */
 [data-privy-dialog],
 [data-radix-portal],

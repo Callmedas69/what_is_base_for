@@ -52,7 +52,7 @@ export const MINT_LIMITS = {
  */
 export const PHRASE_CONFIG = {
   MIN_LENGTH: 0, // Empty allowed (auto-filled with random)
-  MAX_LENGTH: 64,
+  MAX_LENGTH: 13,
   MIN_CUSTOM_COUNT: 1, // At least 1 non-empty required
   TOTAL_COUNT: 3,
   PLACEHOLDER: [
@@ -100,7 +100,7 @@ export const RAINBOWKIT_CONFIG = {
  */
 export const MESSAGES = {
   CONNECT_WALLET: "Please connect your wallet to mint",
-  INVALID_PHRASES: "At least one phrase required (max 64 characters each). Empty phrases will use random text.",
+  INVALID_PHRASES: "At least one phrase required (max 13 characters each). Empty phrases will use random text.",
   MINTING: "Minting...",
   MINT_SUCCESS: "Successfully minted!",
   MINT_ERROR: "Minting failed. Please try again.",

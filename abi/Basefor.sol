@@ -9,19 +9,22 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
+import "./interfaces/IBaseforAssets.sol";
+
 interface IBaseforPhrasesRegistry {
     function getPhrase(uint256 phraseId) external view returns (string memory);
     function totalPhrases() external view returns (uint256);
 }
 
 interface IBaseforRenderer {
-    function buildHTML(
+    function buildSVG(
         string memory phrase1,
         string memory phrase2,
         string memory phrase3,
         string memory textColor1,
         string memory textColor2,
-        string memory textColor3
+        string memory textColor3,
+        string memory backgroundColor
     ) external view returns (string memory);
 }
 
@@ -38,18 +41,7 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
 
     IBaseforPhrasesRegistry public immutable phrasesContract;
     IBaseforRenderer public renderer;
-
-    // Text colors for rolling animation (8 colors)
-    string[8] private _textColors = [
-        "#0000FF",
-        "#3c8aff",
-        "#b8a581",
-        "#ffd12f",
-        "#66c800",
-        "#b6f569",
-        "#fc401f",
-        "#fea8cd"
-    ];
+    IBaseforAssets public assets;
 
     // Custom phrase overrides per token [phrase1, phrase2, phrase3]
     mapping(uint256 => string[3]) private _customPhrases;
@@ -82,7 +74,7 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
         phrasesContract = IBaseforPhrasesRegistry(_phrasesContract);
 
         // Set custom phrases for token #0
-        _customPhrases[0] = ["{me}", "{you}", "{all of us}"];
+        _customPhrases[0] = ["[me]", "[you]", "[all of us]"];
 
         // Initial mint: 20 NFTs to specified recipient (tokens #0-19)
         uint256 initialMintCount = 20;
@@ -100,7 +92,7 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
             // Emit event with appropriate phrase (first phrase only for event)
             string memory emitPhrase;
             if (tokenId == 0) {
-                emitPhrase = "{me}";
+                emitPhrase = "[me]";
             } else {
                 uint256 phraseId = ((tokenId - 1) %
                     phrasesContract.totalPhrases()) + 1;
@@ -208,6 +200,11 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
         renderer = IBaseforRenderer(_renderer);
     }
 
+    function setAssets(address _assets) external onlyOwner {
+        require(_assets != address(0), "Invalid assets address");
+        assets = IBaseforAssets(_assets);
+    }
+
     function setTokenPhrases(
         uint256 tokenId,
         string calldata phrase1,
@@ -226,8 +223,8 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     function contractURI() external view returns (string memory) {
         bytes memory json = abi.encodePacked(
             "{",
-            '"name":"Basefor",',
-            '"description":"A fully onchain collection of base spirits",',
+            '"name":"What is Base for?",',
+            '"description":"Turns words into identity, and phrases into home",',
             '"seller_fee_basis_points":',
             uint256(royaltyBasisPoints).toString(),
             ",",
@@ -332,29 +329,30 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
             string memory c2,
             string memory c3
         ) = _getThreeColors(tokenId);
+        string memory bgColor = _getBackgroundColor(tokenId);
 
-        // Build animated HTML using external renderer
-        string memory html = renderer.buildHTML(p1, p2, p3, c1, c2, c3);
-        string memory htmlBase64 = Base64.encode(bytes(html));
+        // Build animated SVG using external renderer
+        string memory animatedSvg = renderer.buildSVG(p1, p2, p3, c1, c2, c3, bgColor);
+        string memory animatedSvgBase64 = Base64.encode(bytes(animatedSvg));
 
-        // Build static SVG for image (thumbnail) - white background, first phrase, first color
-        string memory svg = _buildSVGImage(p1, c1);
-        string memory svgBase64 = Base64.encode(bytes(svg));
+        // Build static SVG for image (thumbnail)
+        string memory staticSvg = _buildSVGImage(p1, c1, bgColor);
+        string memory staticSvgBase64 = Base64.encode(bytes(staticSvg));
 
         bytes memory json = abi.encodePacked(
             "{",
-            '"name":"Basefor #',
+            '"name":"WBIF? #',
             tokenId.toString(),
             '",',
-            '"description":"A fully onchain collection of base spirits",',
+            '"description":"Turns words into identity, and phrases into home",',
             '"attributes":[',
             _buildAttributes(p1, p2, p3, c1, c2, c3),
             "],",
             '"image":"data:image/svg+xml;base64,',
-            svgBase64,
+            staticSvgBase64,
             '",',
-            '"animation_url":"data:text/html;base64,',
-            htmlBase64,
+            '"animation_url":"data:image/svg+xml;base64,',
+            animatedSvgBase64,
             '"',
             "}"
         );
@@ -457,18 +455,21 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     */
 
     // OPTIMIZED IMPLEMENTATION - Minimal preview SVG for Blockscout compatibility
-    // Design: "base.is" logo + dynamic phrase below
+    // Design: "base.is" logo + dynamic phrase below + colored background
     // Size: ~3 KB Base64
     function _buildSVGImage(
         string memory phrase,
-        string memory textColor
+        string memory textColor,
+        string memory backgroundColor
     ) internal pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
                     '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
-                    // White background
-                    '<rect width="512" height="512" fill="#FFFFFF"/>',
+                    // Dynamic background color
+                    '<rect width="512" height="512" fill="',
+                    backgroundColor,
+                    '"/>',
                     // Wrapper group with slight left offset
                     '<g transform="translate(-10, 0)">',
                     // Base logo
@@ -600,18 +601,28 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
             string memory color3
         )
     {
-        // Token #0 gets special colors: blue, lighter blue, tan/beige
+        uint256 len = assets.textColorsCount();
+
+        // Token #0 gets special colors (Base blue variants)
         if (tokenId == 0) {
             return (
-                _textColors[0], // blue (#0000FF)
-                _textColors[1], // lighter blue (#3c8aff)
-                _textColors[6] // red (#fc401f)
+                assets.getTextColor(32), // blue (#0000FF) - last in array
+                assets.getTextColor(6),  // dark blue (#0037AC)
+                assets.getTextColor(13)  // indigo (#121C61)
             );
         }
 
-        uint256 len = _textColors.length;
-        color1 = _textColors[(tokenId * 3) % len];
-        color2 = _textColors[(tokenId * 5) % len];
-        color3 = _textColors[(tokenId * 11) % len];
+        color1 = assets.getTextColor((tokenId * 3) % len);
+        color2 = assets.getTextColor((tokenId * 5) % len);
+        color3 = assets.getTextColor((tokenId * 11) % len);
+    }
+
+    /**
+     * @notice Get background color for a token using modulo pattern
+     */
+    function _getBackgroundColor(
+        uint256 tokenId
+    ) internal view returns (string memory) {
+        return assets.getBackgroundColor((tokenId * 17) % assets.backgroundColorsCount());
     }
 }

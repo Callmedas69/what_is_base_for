@@ -3,55 +3,66 @@ pragma solidity ^0.8.24;
 
 /**
  * @title BaseforAssets
- * @notice Pure CSS and JavaScript assets for Basefor NFTs
+ * @notice CSS, SVG assets, and color palettes for Basefor NFTs
  */
 contract BaseforAssets {
-    /**
-     * @notice Returns base64-encoded cloud SVG
-     */
-    function getCloudSVGBase64() external pure returns (string memory) {
-        return
-            "PHN2ZyB2aWV3Qm94PSIwIDAgMTAwMCA1MDAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIHNsaWNlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogICAgICA8ZGVmcz4KICAgICAgICA8bGluZWFyR3JhZGllbnQgaWQ9InNreUdyYWRpZW50IiB4MT0iMCUiIHkxPSIxMDAlIiB4Mj0iMCUiIHkyPSIwJSI+CiAgICAgICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjogIzJhMmEyYTsgc3RvcC1vcGFjaXR5OiAxIiAvPgogICAgICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiAjMWExYTFhOyBzdG9wLW9wYWNpdHk6IDEiIC8+CiAgICAgICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiAjMGEwYTBhOyBzdG9wLW9wYWNpdHk6IDEiIC8+CiAgICAgICAgPC9saW5lYXJHcmFkaWVudD4KICAgICAgICA8ZmlsdGVyIGlkPSJmaWx0ZXItYmFzZSIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSI+CiAgICAgICAgICA8ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC4wMDgiIG51bU9jdGF2ZXM9IjYiIHNlZWQ9Ijg1MTciIC8+CiAgICAgICAgICA8ZmVEaXNwbGFjZW1lbnRNYXAgaW49IlNvdXJjZUdyYXBoaWMiIHNjYWxlPSIxODAiIC8+CiAgICAgICAgICA8ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIyNSIgLz4KICAgICAgICAgIDxmZUNvbXBvbmVudFRyYW5zZmVyPjxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuOSIgLz48L2ZlQ29tcG9uZW50VHJhbnNmZXI+CiAgICAgICAgPC9maWx0ZXI+CiAgICAgICAgPGZpbHRlciBpZD0iZmlsdGVyLWJhY2siIHg9Ii01MCUiIHk9Ii01MCUiIHdpZHRoPSIyMDAlIiBoZWlnaHQ9IjIwMCUiPgogICAgICAgICAgPGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuMDA3IiBudW1PY3RhdmVzPSI0IiBzZWVkPSI5ODIzIiAvPgogICAgICAgICAgPGZlRGlzcGxhY2VtZW50TWFwIGluPSJTb3VyY2VHcmFwaGljIiBzY2FsZT0iMTYwIiAvPgogICAgICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMzAiIC8+CiAgICAgICAgICA8ZmVDb21wb25lbnRUcmFuc2Zlcj48ZmVGdW5jQSB0eXBlPSJsaW5lYXIiIHNsb3BlPSIwLjMiIC8+PC9mZUNvbXBvbmVudFRyYW5zZmVyPgogICAgICAgIDwvZmlsdGVyPgogICAgICAgIDxmaWx0ZXIgaWQ9ImZpbHRlci1taWQiIHg9Ii01MCUiIHk9Ii01MCUiIHdpZHRoPSIyMDAlIiBoZWlnaHQ9IjIwMCUiPgogICAgICAgICAgPGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuMDA5IiBudW1PY3RhdmVzPSI1IiBzZWVkPSI3NDEyIiAvPgogICAgICAgICAgPGZlRGlzcGxhY2VtZW50TWFwIGluPSJTb3VyY2VHcmFwaGljIiBzY2FsZT0iMTcwIiAvPgogICAgICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMzUiIC8+CiAgICAgICAgICA8ZmVDb21wb25lbnRUcmFuc2Zlcj48ZmVGdW5jQSB0eXBlPSJsaW5lYXIiIHNsb3BlPSIwLjIiIC8+PC9mZUNvbXBvbmVudFRyYW5zZmVyPgogICAgICAgIDwvZmlsdGVyPgogICAgICAgIDxmaWx0ZXIgaWQ9ImZpbHRlci1mcm9udCIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSI+CiAgICAgICAgICA8ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC4wMDYiIG51bU9jdGF2ZXM9IjUiIHNlZWQ9IjYyNTEiIC8+CiAgICAgICAgICA8ZmVEaXNwbGFjZW1lbnRNYXAgaW49IlNvdXJjZUdyYXBoaWMiIHNjYWxlPSIxNDAiIC8+CiAgICAgICAgICA8ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSI0MCIgLz4KICAgICAgICAgIDxmZUNvbXBvbmVudFRyYW5zZmVyPjxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuNCIgLz48L2ZlQ29tcG9uZW50VHJhbnNmZXI+CiAgICAgICAgPC9maWx0ZXI+CiAgICAgIDwvZGVmcz4KICAgICAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNza3lHcmFkaWVudCkiIC8+CiAgICAgIDxnIGZpbHRlcj0idXJsKCNmaWx0ZXItZnJvbnQpIj4KICAgICAgICA8ZWxsaXBzZSBjeD0iNTIwIiBjeT0iMjQwIiByeD0iNDQwIiByeT0iMTYwIiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMTUpIiAvPgogICAgICAgIDxlbGxpcHNlIGN4PSI0MDAiIGN5PSIyNjAiIHJ4PSIzNzAiIHJ5PSIxNTAiIGZpbGw9InJnYmEoMCwgMCwgMCwgMC4xKSIgLz4KICAgICAgICA8ZWxsaXBzZSBjeD0iNjAwIiBjeT0iMjUwIiByeD0iNDAwIiByeT0iMTU1IiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMTIpIiAvPgogICAgICA8L2c+CiAgICAgIDxnIGZpbHRlcj0idXJsKCNmaWx0ZXItbWlkKSI+CiAgICAgICAgPGVsbGlwc2UgY3g9IjUyMCIgY3k9IjIwMCIgcng9IjQ3MCIgcnk9IjE2NSIgZmlsbD0icmdiYSg2NiwgMTA1LCAxNDYsIDAuMSkiIC8+CiAgICAgICAgPGVsbGlwc2UgY3g9IjQ1MCIgY3k9IjIxMCIgcng9IjQyMCIgcnk9IjE1NSIgZmlsbD0icmdiYSg2NiwgMTA1LCAxNDYsIDAuMDgpIiAvPgogICAgICAgIDxlbGxpcHNlIGN4PSI2MjAiIGN5PSIxOTUiIHJ4PSI0NTAiIHJ5PSIxNjAiIGZpbGw9InJnYmEoNjYsIDEwNSwgMTQ2LCAwLjA5KSIgLz4KICAgICAgPC9nPgogICAgICA8ZyBmaWx0ZXI9InVybCgjZmlsdGVyLWJhY2spIj4KICAgICAgICA8ZWxsaXBzZSBjeD0iMzcwIiBjeT0iMTQwIiByeD0iNDQwIiByeT0iMTYwIiBmaWxsPSJyZ2JhKDIxNSwgMjE1LCAyMTUsIDAuMTUpIiAvPgogICAgICAgIDxlbGxpcHNlIGN4PSI1MDAiIGN5PSIxMzAiIHJ4PSI0MDAiIHJ5PSIxNTUiIGZpbGw9InJnYmEoMjE1LCAyMTUsIDIxNSwgMC4xMikiIC8+CiAgICAgICAgPGVsbGlwc2UgY3g9IjYwMCIgY3k9IjE0NSIgcng9IjQyMCIgcnk9IjE1MCIgZmlsbD0icmdiYSgyMTUsIDIxNSwgMjE1LCAwLjE0KSIgLz4KICAgICAgPC9nPgogICAgICA8ZyBmaWx0ZXI9InVybCgjZmlsdGVyLWJhc2UpIj4KICAgICAgICA8ZWxsaXBzZSBjeD0iNTIwIiBjeT0iMTAwIiByeD0iNTAwIiByeT0iMTgwIiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuNCkiIC8+CiAgICAgICAgPGVsbGlwc2UgY3g9IjQwMCIgY3k9IjExMCIgcng9IjQ2MCIgcnk9IjE2NSIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjM1KSIgLz4KICAgICAgICA8ZWxsaXBzZSBjeD0iNjIwIiBjeT0iOTUiIHJ4PSI0ODAiIHJ5PSIxNzUiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4zOCkiIC8+CiAgICAgICAgPGVsbGlwc2UgY3g9IjUyMCIgY3k9IjcwIiByeD0iNDQwIiByeT0iMTYwIiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMzIpIiAvPgogICAgICAgIDxlbGxpcHNlIGN4PSIzMjAiIGN5PSIxMjAiIHJ4PSI0MDAiIHJ5PSIxNTAiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4zKSIgLz4KICAgICAgICA8ZWxsaXBzZSBjeD0iNzIwIiBjeT0iMTE1IiByeD0iNDIwIiByeT0iMTY1IiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMzUpIiAvPgogICAgICA8L2c+CiAgICA8L3N2Zz4=";
-    }
+    // Background colors (light pastels) - 35 colors
+    string[35] private _backgroundColors = [
+        "#E2E2FF", "#C3F3FD", "#C8F5EA", "#D7F9E6", "#EFF7D3",
+        "#FEEFC9", "#FEE6D8", "#FDE2E9", "#FCE4FD", "#F4E8FF",
+        "#E6E8FF", "#B5CDFF", "#8FE8FB", "#9DEBD9", "#BAF2D0",
+        "#E4F3B0", "#FDE1B3", "#FDC2A5", "#F9B6BC", "#F6B6F1",
+        "#EAC5FE", "#CAD4FF", "#98A9FF", "#71E4FA", "#83E7C9",
+        "#A2ECA9", "#FABC84", "#F39E9D", "#F0A0E6", "#DAB2FD",
+        "#BAC9F4", "#9FB0F0", "#8BA0F2", "#B08EF6", "#C6A0F8"
+    ];
+
+    // Text colors (dark) - 33 colors
+    string[33] private _textColors = [
+        "#00174B", "#001A32", "#001E12", "#002578", "#002B4D",
+        "#003420", "#0037AC", "#003F69", "#014A2E", "#061910",
+        "#090B10", "#090E31", "#0E391F", "#121C61", "#155327",
+        "#190600", "#1A0C31", "#1E2E97", "#292E3E", "#300C00",
+        "#310003", "#310928", "#331301", "#33175E", "#4E0E3F",
+        "#502792", "#512801", "#591700", "#5B0207", "#6A1556",
+        "#802201", "#82050C", "#0000FF"
+    ];
 
     /**
-     * @notice Returns JavaScript for canvas animation
+     * @notice Returns CSS keyframes for SVG animations with embedded Doto font
      */
-    function getJavaScript() external pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    _getJavaScriptInit(),
-                    _getJavaScriptAnimate(),
-                    _getJavaScriptDots()
-                )
-            );
+    function getCSS() external view returns (string memory) {
+        return string(abi.encodePacked(
+            "@font-face{font-family:'Doto';src:url('data:font/woff2;base64,",
+            this.getDotoFont(),
+            "') format('woff2');font-weight:700}",
+            "@keyframes rotateText{0%,20%{transform:translateY(0)}25%,45%{transform:translateY(-45px)}50%,70%{transform:translateY(-90px)}100%{transform:translateY(0)}}",
+            ".rotator{animation:rotateText 10s ease infinite}"
+        ));
     }
 
     /**
-     * @notice Returns CSS for text roller animation
+     * @notice Returns the Doto 700 font as base64 encoded WOFF2
      */
-    function getCSS() external pure returns (string memory) {
-        return _getCSSKeyframes();
+    function getDotoFont() external pure returns (string memory) {
+        return "d09GMgABAAAAAA9YAA4AAAABUSQAAA76AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYGYD9TVEFUQACEdBEICoWKBIXANwuDHgABNgIkA4MgBCAFhD4Hg3kMB1vAaTEbUcHGAYCof38U5UlUAf/X42TIYBfY1FdBpqC7A49oB6aRWU9a8AlCd+PlsOg4EEuXzMGBih2Ym81eMJXOlKL74e+vu8jfmJd3Yw8pNGtS30Kkde+6ePj/ZfO+PwNdwUpKV60YgUQh3CIctlZbi0LRkwjN8SlV2Jy4zcD/x37t3PdtxSQ0TUEsWTYIzTQTCqVSicQdQt3pXMjpJ65s3g4OS6/WdAvEF+ISgH64xySXx5n6jC8YCwrYIgnfqlaoJgCsmm5D8UdR/xInckziUagMwq1Pc3YpPspQVZrExmExZn0uZemThQkZu30SjTKa4hBS66g0kOaG9/M8zxVHMPLkCh9eRoMCtl/PF0b38dhK/TyGpPj/753+Nk+K1gTPCnnMe7zx1vF3omwPSrjjgbUBs97xpsgH+0ASYJR9+P9v+d/sFxZpa0KyAi3u6r9J/Qqymo9COI+UvU8RqrpnssKyHUYte+/TUyQNebFzNxPQCJCI/EripmXyJQzSZvoEbP/42+KnpkgORSwaCZs5IQtuQBmYAsDw8HgLtGPvKk45LiBbjn4CzYD4uz4BHUCQEIMSJPRATi/MjyYB5sqCnpSEpKCJELX2DQSkiAJIkEEJiqAEnTYAJrFDK0jVpceQcdPmLfmPkbaSfJ3e6ZsljuuEWhdVo3pkRU7UjfY6u6zFiUKHdj36jJo2a9FajLTle81wMnehSlQb2/WZ9AGKTQAUg1DZr1QZUPkEfu6Cn0M/B3/6wf/4OyGM/AH//IOgXD7EMoCYj0WQE1H1HgTpVMRVEy0DGjTS08peomaTTuxYMidMqAnjfBSwMyZLgGjt9CGERcTE5dCgRYcZC1Zs2HESJESYCFHiZMiSI0+RGSPmdGxQKTFkyZG7EOESJEmXIVO2fMXqtBk0YsayHddu3Ho0x5gpXZvCbEwb5cxBlRhDcjip18JatVgdsByuEE/ARKWRSkphQo8BI0oc+HDjIYBXHn7SJEiSokBMBE3KVBhQp02DFW8ePHlJkyxFqkCFKpQoVauMixrrrqxac+DYIZtyUdQs2KL7bPmaG64IrSiA8I44Rt1ndxv3bQIthCRuVmb95eAKqpsAsJ06yjhj1IaZn4qsObX4swYEemf6mxNcIqFXk/dA74ETYifxCH634FgWIZQyynXxEEPF0C3w2Vq/8jymScTrZXLL6HqdyTJom5RFlNAXEutfkh+DDcQlG36XvMRghNX6qalhwdjr+1U36h/sjj60MwUL1QIoxQJtJNvmJNPbJyzw9xUZAOAsd9O/KDCOh3YOx9bzdkvmb1Xfb1u7vRX9ffFNmmq29yrVWYnv3FNmwma+L/7cvDtNeANHiR3uyBxHNA4+1t4OylCNSKt+wcYv6UQRsObn6d3SF+uKhxHAuqWcQyT/iKgzkOyJ14Pe/iga3zSINK+tX5Ix4fx9WYwXPm/PF69Sil+IB9LBdZjzXiq+3wgwny8aHQgB4alpJCSAw5JPM4TnH//TlZEvsCQufKgCE7V/GpYyYZ6j+pMQSY7b/C7bkUOjShHwl8pvWRAwrpDRO/JXvxAfH0lDi5MLlUGE86mxvo2Xp0aONI0ptQlZUEo4qi5MiIbPfg2lQ54vi/lEPin+4jRoF2HnQ//k5tdy0gDoV/LyQ+zPdgXNn9J6zv1eGn32q4GnJDdFd0+ykV/ri34mzMPDy7mhHaHdR//IKF4/4R1GnNSdG0YkbS91JcHrghNge0pyUV64zEPPnOO7fReUvn7xTSPzr3nZHx9YJ6PBfJwCoE4tfs/8E4JhsvcTL4+T3rl4Bo787X1GZrsbUXDPw316WuIh7kUesIUCvZ3mG1YvrGeJWcvHz7r5u789rfg5yjMGC/eugvasmd8rBrvtvuQX8/3db56VDWA2KfbGssO2JdCkgVfBfGhbxzvfyGRGVi+kogXi6EqLE3/Kj6RLSOa9NPmTP9o+Y9PzbbY0LBU/o/KGt+jLiOpXgaXW2BJuWQi9+dV0ApCX+42Ks8AUJYwPPK1Zq+WnEWHiqUi/UGB7qdlwHvIDYMXm0L1t/r3tOu4+JBHYx8+XqqlIFDOl3kwwZG8BOlP6xf2Zt7T403ync0J28JTpvbI/CrGGOBFZ8Wy6V5hOeg/tU7pqO1ukhYqNyStxpQ1gADiIJOA4P0kYjUSpmxY62/lXj8qSH2IgJ0bBdSGbOXvmVZj5H/iKGDQEbl8ji819RJIfHt7Rlfo2XGb/y4NxKUPWrYfA+uvxz2W8ra5t3P8aKdCGFyiEfWnvw8XBtzEfaZrG3se/+hc8ZYq6U2rS/FD1G7x4iB16kJ9f0vAs6MWOp+IpNOzCzTWU/SZTnGgU28f7bTGnZEWgLY9pjhee02+KyuswIWMMRYEl8ZZn+FXJtTlSnQfQf1CG+hyZTPMhwMiFxy346zlPGTP9S17woFT7vuX+WSb/8TV+iC+LUHDWJDzUYljS9M8b4cPfxk+huOtH2Lnueg0Z1e1FdP7l5depWOM52dAmPhl9yYI9DSzL//xHFPhPzPoT3z1+nF9/7gfuMJjj7z+qrn5jefGbWayZPvVn75j6P/tX4Gbr150EapchuC6GY+IcYv/+IM4jvN2CYrBo86FdNGivpyH0C+zDJvRdYi9vhYRx3Oxv8GRdw4vy21o22o7fZr+bxZSt80/pv4Cistv71R1p+4MIaC3AugcPX8w/VnjsdYhf6Mam4AuvbN1xvBFaa1+X3FKd/iIg1wrDF1rJz7x5nnpaJXu/g8beBE+5ja9pR/9l1KScYOrBzv77EbWkhmuwktoW+GI8zbQ1g19tyOz9WEeQCWyaZlAJj0F4wE4+UOWqTBcdKBfArKGW5oCxSI/ouj/bTcz8nK3VGQwMu13et+9jjZKnS5E1YY+bNXu//3bNrl0OF0IdmoeomN9Zs33SMUQadWDVgMChjnHyE5pVW8iPLl7jGEDkXLAwwnj2xnPjFXpxtHu0B/PBJLxgln9+E7hVDDm/EVxabL7SsfuZE6IigZVFQ3gdwtOWTkO4q1dgsPoSDIFHTztx2lxmfjbK65lrGKRR1cqPgOBSqYh+QNUa4YCNhSXuPRTY+TYEUuvFW+A+2tUjdbjs5pMTLCoWA0rIcSgr94NmkKfb3kFXFc7f36ApPXSQPkASDnfHmUOO5IsdW34yIkp+5hWa+dmpplgBIhjPLO87ik4h/JcZJcN3kJRMh9TtLydpAK7BoponBjBQK0OOXhfOEOhbt1Y3bjX/O13CfGjQssHhOzwcho/q7V5uuLVqH1LK42aGcLXtHy8Itv7FyOK/zcbd+x5DO1V5LSkJmiOBr3vtd2IeMqpJ0unb23KU9sxvJcDP2PdPWsu1dJNnU/mB2K6HvC6ygq8kCxkJPoXontcPeZTWNusJ1f3woCM4gXLhjBut21K4ctt3tysBilU3QNUACLDZoaXaElgPZlh72z797AcrbzTAq35CPVtu59P8kmK/1MATFh+NCXv38iPHn/Jj6zOnUKN1RuX/7l8TcceUrT8wfBJaf3e4ffyOquebiXVCHd5sH3TuOu2gVY2hebcGp9CFMvHb/gmsGtpQvjWfHp81fEFROx10HIxgI3RgPyReMzqJOEOtEWnG6oyXrDXk/aI7Cul4Q8kCz4D/FA8zfl0wmx7xYs/AKpmLb80A+YMjPZr6oddzG08rWQMi+GICNaE2l7ZF2xrzTL3bNdcQw8FbnrJtw5mj2yvc4XeMLcufwJgJmpfEarzLtoDYDrmf3maM/9cSZ4d5m33hClLeef3/C/V7e6F/8WrVxfhCnV+H5QMKtk9OH4cVGd5geBrZLoY511NIGwcQU2ioqTwF6mgDP+hJYwncO1eODuD8SFasmwq1Kjf/858Bj5FkYYPhFI4O9GHgzrZ1nWhGWzTQaZOfqvJvGSxcIpqf1ZnVX//izim5+2//eCIkXxGuiN+ZoFgdoQHsfgW4FJ8UYFKtrgq2VRAY1Q6zxcMHSbeOake7hMQjenW22J38S4i0W7JDEw4f5Li1CwJl/qiz+g6vXQSYNRCMUs+xvFcQ2lfCj5tmatLHFav6W1HXM+iAuGarNKyd/wAJU30UjN/YWxXjDYeCsxm8bwbJBB5SARQDQo0ByhJsOGB9m0eAaRqQg4640GMpBXX6tyXooKtJl9vUnT7gFmFPUNeCIT7IbuXs0Br/aU/RdlVXH9TE29b5ugSxcYAHpPiiCCoU6A+A3QzgyYJIxA1jxW44Iw6oOHOg+0+V8uOiHtsDAzhxptRYfF/hv6VH0PFm/IwrODme6aKQjdeoCBtoH2vMBdue4PPPwp+QCeb/4j6Nze9dr10/gi06gKt4fwRvRayIjBSr45f7SCAk0L/d/YHeR/qScwH8Pqo7B/zp+nCA5P9LeUocgs+AQPZcQJoBErESa74lnuJfzWlCv5qu400inUf8Nqg96dx7JffncWrP5YH39rUwFkwDSuXuM94w13Ku9QF9NDK8vVXohYyC97gADQCpXGr0CUV5GFxH/nev5Px4TcjF6+iZ9boa6r2eilSvr8bTkzAiHCVowugVMYmZUBs/TlEScMwo5igjrG9gkRf0ZWJE2SjWNEHXY1p3KERiOMqRqB4WGRzVcJCo/CjRyXCYYuTAMAmz61jVRBJFTcHGxsY7Z9FHI+otCz1/2ni8pae13PehdcMINGxThX8Xam5sbg38bTtaFTCqR/mLKpEwo6MhQxeIqiE33hAvljpl0EGGREIEfxoT1J4lf2fRUJbRkwwAAInjZgoT+QzAvnXnBr3PHDicrMuNb9178BPJnv/+ZVGPnjx7EQiGGpu4ZpYw7twb3pVtY6RI/wcxqw+fOl37IrjVRZESZe/6aAsQpCQy9toFInCkwQOJrhA61Lhx5U6Vujy6wryKu1eHzDs9WUrNw/kzKVykKBGYDJkyid2bVF8M0KNjqIBWpNI2YNCqNUbIGYsWK04ME6bMsDH36NefJcziYY0lSJJsQiJqLVp1SGElH5GYkLQt+aY4dcL4cWjGrDnbss0UerEuFytGDCihPLLzpdxDrPlAw16qdBnSaEa6AoVYceTE2YdztVxQ5WOGSrIoxtAxQyJ0Fq9S5t8cuhhmmzKMqNjYONT4wd7S2NrQeRrFyiPfAQAAAA==";
     }
 
-    function _getCSSKeyframes() internal pure returns (string memory) {
-        return
-            "@keyframes animation{0%,100%{top:0}20%{top:0}25%{top:-30px}45%{top:-30px}50%{top:-60px}70%{top:-60px}}";
+    // --- Color Getters ---
+
+    function getBackgroundColor(uint256 index) external view returns (string memory) {
+        return _backgroundColors[index % 35];
     }
 
-    function _getJavaScriptInit() internal pure returns (string memory) {
-        return
-            "const c=document.getElementById('c');const ctx=c.getContext('2d');const h=document.getElementById('hidden');const hctx=h.getContext('2d');const img=new Image();img.src='data:image/svg+xml;base64,'+cloudSVG;const cfg={hoverRadius:50,dotFadeTime:2000,dotSpacing:8,dotSize:16,lineStep:4,cloudThreshold:180,transitionZone:40,colors:['#66c800','#fea8cd','#3c8aff']};let mouseX=-1000,mouseY=-1000;const dotLastActive=new Map();c.addEventListener('mousemove',(e)=>{const rect=c.getBoundingClientRect();mouseX=e.clientX-rect.left;mouseY=e.clientY-rect.top;});c.addEventListener('mouseleave',()=>{mouseX=-1000;mouseY=-1000;});img.onload=()=>{h.width=c.width;h.height=c.height;hctx.drawImage(img,0,0,c.width,c.height);animate();};";
+    function getTextColor(uint256 index) external view returns (string memory) {
+        return _textColors[index % 33];
     }
 
-    function _getJavaScriptAnimate() internal pure returns (string memory) {
-        return
-            "function animate(){ctx.clearRect(0,0,c.width,c.height);for(let x=0;x<c.width;x+=cfg.lineStep){const gradient=ctx.createLinearGradient(x,0,x,c.height);for(let y=0;y<c.height;y+=10){const p=hctx.getImageData(x,y,1,1).data;const r=p[0],g=p[1],b=p[2],brightness=(r+g+b)/3,a=p[3]/255;let lineOpacity;if(brightness<cfg.cloudThreshold-cfg.transitionZone){lineOpacity=(brightness/255)*a*0.9;}else if(brightness>=cfg.cloudThreshold){lineOpacity=0;}else{const fadeAmount=(cfg.cloudThreshold-brightness)/cfg.transitionZone;lineOpacity=(brightness/255)*a*0.9*fadeAmount;}gradient.addColorStop(y/c.height,`rgba(${r},${g},${b},${lineOpacity})`);}ctx.strokeStyle=gradient;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,c.height);ctx.stroke();}";
+    function backgroundColorsCount() external pure returns (uint256) {
+        return 35;
     }
 
-    function _getJavaScriptDots() internal pure returns (string memory) {
-        return
-            "const now=Date.now();for(let x=0;x<c.width;x+=cfg.dotSpacing){for(let y=0;y<c.height;y+=cfg.dotSpacing){const p=hctx.getImageData(x,y,1,1).data;const brightness=(p[0]+p[1]+p[2])/3;if(brightness>=cfg.cloudThreshold)continue;let edgeFade=1;if(brightness>cfg.cloudThreshold-cfg.transitionZone){edgeFade=(cfg.cloudThreshold-brightness)/cfg.transitionZone;}const dx=x-mouseX,dy=y-mouseY,distance=Math.sqrt(dx*dx+dy*dy);const dotKey=`${x},${y}`;const dotSeed=(x*7+y*13)%100;const variableRadius=cfg.hoverRadius+(dotSeed-50)*0.3;const softEdge=20;if(distance<variableRadius+softEdge){const activationChance=1-Math.max(0,(distance-variableRadius)/softEdge);if(Math.random()<activationChance||distance<variableRadius){dotLastActive.set(dotKey,now);}}const lastActive=dotLastActive.get(dotKey);if(lastActive&&now-lastActive<cfg.dotFadeTime){const timeSinceActive=now-lastActive;const colorIndex=Math.floor((x/c.width)*cfg.colors.length)%cfg.colors.length;const baseColor=cfg.colors[colorIndex];const r=parseInt(baseColor.slice(1,3),16),g=parseInt(baseColor.slice(3,5),16),b=parseInt(baseColor.slice(5,7),16);const fadeFactor=distance>=variableRadius?Math.max(0,1-timeSinceActive/cfg.dotFadeTime):1-(distance/variableRadius)**2;const size=(brightness/255)*cfg.dotSize*fadeFactor;if(size>0.5&&fadeFactor>0.1){const finalOpacity=fadeFactor*0.3*edgeFade;ctx.fillStyle=`rgba(${r},${g},${b},${finalOpacity})`;ctx.beginPath();ctx.arc(x,y,size/2,0,Math.PI*2);ctx.fill();}}else if(lastActive){dotLastActive.delete(dotKey);}}}requestAnimationFrame(animate);}";
+    function textColorsCount() external pure returns (uint256) {
+        return 33;
     }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
-import { ConnectButton } from "@/components/ConnectButton";
+import { BalanceDisplay, WalletButton } from "@onchainfi/connect";
 import { APP_CONFIG } from "@/lib/config";
 import { useAudio } from "@/hooks/useAudio";
 import { useScrambleText } from "@/hooks/useScrambleText";
@@ -74,7 +74,7 @@ export function Header() {
 
       {/* Right: Wallet */}
       <div className="wallet-button-container">
-        <ConnectButton />
+        <WalletButton position="inline" />
       </div>
     </header>
   );
