@@ -38,7 +38,7 @@ export function SuccessModal({
   }, [imageUrl]);
 
   const tokenIdString = tokenId.toString();
-  const contractAddress = CONTRACTS.BASEFOR;
+  const contractAddress = CONTRACTS.WHATISBASEFOR;
 
   // URLs
   const openSeaUrl = `https://opensea.io/assets/base/${contractAddress}/${tokenIdString}`;

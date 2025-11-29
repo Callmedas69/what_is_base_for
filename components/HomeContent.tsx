@@ -10,7 +10,7 @@ import {
 import { useOnchainWallet, useChainAlignment } from "@onchainfi/connect";
 import { parseEventLogs } from "viem";
 import { toast } from "sonner";
-import { BASEFOR_ABI } from "@/abi/Basefor.abi";
+import { WHATISBASEFOR_ABI } from "@/abi/WhatIsBaseFor.abi";
 import { CONTRACTS, MESSAGES, MINT_LIMITS } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import { Header } from "@/components/Header";
@@ -101,44 +101,44 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
 
   // Contract reads
   const { data: tokenURI } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "tokenURI",
     args: mintedTokenId ? [mintedTokenId] : undefined,
     query: { enabled: !!mintedTokenId },
   });
 
   const { data: regularMinted = 0n } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "mintedRegularPerWallet",
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
 
   const { data: customMinted = 0n } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "mintedCustomPerWallet",
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
 
   const { data: totalSupply = 0n } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "totalSupply",
   });
 
   const { data: maxSupply = 0n } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "MAX_SUPPLY",
   });
 
   const { data: isPaused = false } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "paused",
   });
 
@@ -149,8 +149,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   const isSoldOut = maxSupply > 0n && totalSupply >= maxSupply;
 
   // URL constants for dock items
-  const OPENSEA_URL = `https://opensea.io/assets/base/${CONTRACTS.BASEFOR}`;
-  const ONCHAINCHECKER_URL = `https://onchainchecker.xyz/collection/base/${CONTRACTS.BASEFOR}/0`;
+  const OPENSEA_URL = `https://opensea.io/assets/base/${CONTRACTS.WHATISBASEFOR}`;
+  const ONCHAINCHECKER_URL = `https://onchainchecker.xyz/collection/base/${CONTRACTS.WHATISBASEFOR}/0`;
   const FARCASTER_SHARE_URL = `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`;
   const X_SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`;
 
@@ -232,8 +232,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
 
     setMintType("regular");
     writeContract({
-      address: CONTRACTS.BASEFOR,
-      abi: BASEFOR_ABI,
+      address: CONTRACTS.WHATISBASEFOR,
+      abi: WHATISBASEFOR_ABI,
       functionName: "mint",
     });
   };
@@ -257,8 +257,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     console.log(`${logPrefix} Executing on-chain mint...`);
     setMintType("custom");
     writeContract({
-      address: CONTRACTS.BASEFOR,
-      abi: BASEFOR_ABI,
+      address: CONTRACTS.WHATISBASEFOR,
+      abi: WHATISBASEFOR_ABI,
       functionName: "mintWithCustomPhrases",
       args: [wrappedPhrase1, wrappedPhrase2, wrappedPhrase3],
     });
@@ -295,8 +295,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     console.log(`${logPrefix} Retrying mint for payment:`, pendingMint.paymentId);
     setMintType("custom");
     writeContract({
-      address: CONTRACTS.BASEFOR,
-      abi: BASEFOR_ABI,
+      address: CONTRACTS.WHATISBASEFOR,
+      abi: WHATISBASEFOR_ABI,
       functionName: "mintWithCustomPhrases",
       args: [phrase1, phrase2, phrase3],
     });
@@ -313,7 +313,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     const handleMintSuccess = async () => {
       try {
         const logs = parseEventLogs({
-          abi: BASEFOR_ABI,
+          abi: WHATISBASEFOR_ABI,
           eventName: "Transfer",
           logs: receipt.logs,
         });

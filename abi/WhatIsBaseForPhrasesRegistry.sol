@@ -2,14 +2,14 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./BaseforPhrases.sol";
+import "./WhatIsBaseForPhrases.sol";
 
 /**
- * @title BaseforPhrasesRegistry
- * @notice Manages phrases for Basefor NFT collection
- * @dev Uses BaseforPhrases library for base phrases (1-299), supports adding new phrases
+ * @title WhatIsBaseForPhrasesRegistry
+ * @notice Manages phrases for WhatIsBaseFor NFT collection
+ * @dev Uses WhatIsBaseForPhrases library for base phrases (1-299), supports adding new phrases
  */
-contract BaseforPhrasesRegistry is Ownable {
+contract WhatIsBaseForPhrasesRegistry is Ownable {
     // Storage for new phrases added after deployment
     mapping(uint256 => string) private _newPhrases;
     uint256 private _totalPhrases = 299; // 299 phrases in library
@@ -33,7 +33,7 @@ contract BaseforPhrasesRegistry is Ownable {
 
         // Use library for original 299 phrases
         if (phraseId <= 299) {
-            return BaseforPhrases.getPhrase(phraseId);
+            return WhatIsBaseForPhrases.getPhrase(phraseId);
         }
 
         // Use storage for new phrases

@@ -3,7 +3,7 @@
  * Single source of truth for all app constants and settings
  */
 
-import { CONTRACT_ADDRESSES, type NetworkConfig } from "@/abi/Basefor.abi";
+import { CONTRACT_ADDRESSES, type NetworkConfig } from "@/abi/WhatIsBaseFor.abi";
 
 /**
  * Current Network Configuration
@@ -20,7 +20,7 @@ export const NETWORK_CONFIG: NetworkConfig = CONTRACT_ADDRESSES[CURRENT_NETWORK]
  * Contract Addresses
  */
 export const CONTRACTS = {
-  BASEFOR: NETWORK_CONFIG.basefor,
+  WHATISBASEFOR: NETWORK_CONFIG.whatIsBaseFor,
   ASSETS: NETWORK_CONFIG.assets,
   RENDERER: NETWORK_CONFIG.renderer,
   PHRASES: NETWORK_CONFIG.phrases,

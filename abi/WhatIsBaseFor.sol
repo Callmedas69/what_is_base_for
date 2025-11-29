@@ -9,26 +9,30 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-import "./interfaces/IBaseforAssets.sol";
+import "./interfaces/IWhatIsBaseForAssets.sol";
 
-interface IBaseforPhrasesRegistry {
+interface IWhatIsBaseForPhrasesRegistry {
     function getPhrase(uint256 phraseId) external view returns (string memory);
     function totalPhrases() external view returns (uint256);
 }
 
-interface IBaseforRenderer {
+interface IWhatIsBaseForRenderer {
     function buildSVG(
         string memory phrase1,
         string memory phrase2,
         string memory phrase3,
         string memory textColor1,
         string memory textColor2,
-        string memory textColor3,
-        string memory backgroundColor
+        string memory textColor3
+    ) external view returns (string memory);
+
+    function buildStaticSVG(
+        string memory phrase1,
+        string memory textColor1
     ) external view returns (string memory);
 }
 
-contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
+contract WhatIsBaseFor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     using Strings for uint256;
 
     // --- Constants & State Variables ---
@@ -39,9 +43,9 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     // ERC2981 Royalty (basis points: 500 = 5%)
     uint96 public royaltyBasisPoints = 500;
 
-    IBaseforPhrasesRegistry public immutable phrasesContract;
-    IBaseforRenderer public renderer;
-    IBaseforAssets public assets;
+    IWhatIsBaseForPhrasesRegistry public immutable phrasesContract;
+    IWhatIsBaseForRenderer public renderer;
+    IWhatIsBaseForAssets public assets;
 
     // Custom phrase overrides per token [phrase1, phrase2, phrase3]
     mapping(uint256 => string[3]) private _customPhrases;
@@ -65,16 +69,16 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     constructor(
         address _phrasesContract,
         address _initialRecipient
-    ) ERC721("Basefor", "BASEFOR") Ownable(msg.sender) {
+    ) ERC721("WhatIsBaseFor", "WIBF") Ownable(msg.sender) {
         require(
             _phrasesContract != address(0),
             "Invalid phrases contract address"
         );
         require(_initialRecipient != address(0), "Invalid recipient address");
-        phrasesContract = IBaseforPhrasesRegistry(_phrasesContract);
+        phrasesContract = IWhatIsBaseForPhrasesRegistry(_phrasesContract);
 
         // Set custom phrases for token #0
-        _customPhrases[0] = ["[me]", "[you]", "[all of us]"];
+        _customPhrases[0] = ["[ME]", "[YOU]", "[ALL OF US]"];
 
         // Initial mint: 20 NFTs to specified recipient (tokens #0-19)
         uint256 initialMintCount = 20;
@@ -134,18 +138,18 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
         if (_nextTokenId >= MAX_SUPPLY) revert SoldOut();
         if (mintedCustomPerWallet[msg.sender] >= 20) revert MaxMintsReached();
 
-        // Count non-empty phrases and validate lengths
+        // Count non-empty phrases and validate lengths (max 20 chars)
         uint256 customCount = 0;
         if (bytes(phrase1).length > 0) {
-            if (bytes(phrase1).length > 64) revert InvalidPhrase();
+            if (bytes(phrase1).length > 20) revert InvalidPhrase();
             customCount++;
         }
         if (bytes(phrase2).length > 0) {
-            if (bytes(phrase2).length > 64) revert InvalidPhrase();
+            if (bytes(phrase2).length > 20) revert InvalidPhrase();
             customCount++;
         }
         if (bytes(phrase3).length > 0) {
-            if (bytes(phrase3).length > 64) revert InvalidPhrase();
+            if (bytes(phrase3).length > 20) revert InvalidPhrase();
             customCount++;
         }
 
@@ -197,12 +201,12 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
 
     function setRenderer(address _renderer) external onlyOwner {
         require(_renderer != address(0), "Invalid renderer address");
-        renderer = IBaseforRenderer(_renderer);
+        renderer = IWhatIsBaseForRenderer(_renderer);
     }
 
     function setAssets(address _assets) external onlyOwner {
         require(_assets != address(0), "Invalid assets address");
-        assets = IBaseforAssets(_assets);
+        assets = IWhatIsBaseForAssets(_assets);
     }
 
     function setTokenPhrases(
@@ -329,19 +333,18 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
             string memory c2,
             string memory c3
         ) = _getThreeColors(tokenId);
-        string memory bgColor = _getBackgroundColor(tokenId);
 
         // Build animated SVG using external renderer
-        string memory animatedSvg = renderer.buildSVG(p1, p2, p3, c1, c2, c3, bgColor);
+        string memory animatedSvg = renderer.buildSVG(p1, p2, p3, c1, c2, c3);
         string memory animatedSvgBase64 = Base64.encode(bytes(animatedSvg));
 
-        // Build static SVG for image (thumbnail)
-        string memory staticSvg = _buildSVGImage(p1, c1, bgColor);
+        // Build static SVG for image (thumbnail) using renderer
+        string memory staticSvg = renderer.buildStaticSVG(p1, c1);
         string memory staticSvgBase64 = Base64.encode(bytes(staticSvg));
 
         bytes memory json = abi.encodePacked(
             "{",
-            '"name":"WBIF? #',
+            '"name":"WIBF #',
             tokenId.toString(),
             '",',
             '"description":"Turns words into identity, and phrases into home",',
@@ -399,157 +402,6 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
             );
     }
 
-    // OLD IMPLEMENTATION - Commented out due to size (>50 KB) causing Blockscout timeout
-    // This version used cloud masks with 15 ellipses + patterns which made the SVG too large
-    // Replaced with optimized version below (3.9 KB) for better explorer compatibility
-    /*
-    function _buildSVGImage(
-        string memory phrase,
-        string memory textColor
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
-                    _buildSVGDefs(),
-                    '<rect width="512" height="512" fill="#FFFFFF"/>',
-                    '<rect width="512" height="512" fill="url(#lines)" mask="url(#cloudMask)"/>',
-                    _buildLogo(),
-                    '<text x="256" y="280" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="24" style="text-transform:lowercase" fill="',
-                    textColor,
-                    '">',
-                    _escapeForHTML(phrase),
-                    "</text></svg>"
-                )
-            );
-    }
-
-    function _buildSVGDefs() internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    "<defs>",
-                    '<pattern id="lines" width="4" height="512" patternUnits="userSpaceOnUse">',
-                    '<rect x="3" width="1" height="512" fill="rgba(0,0,0,0.05)"/>',
-                    "</pattern>",
-                    '<mask id="cloudMask">',
-                    '<ellipse cx="256" cy="164" rx="120" ry="100" fill="white"/>',
-                    '<ellipse cx="246" cy="205" rx="140" ry="110" fill="white"/>',
-                    '<ellipse cx="282" cy="142" rx="100" ry="85" fill="white"/>',
-                    '<ellipse cx="26" cy="230" rx="100" ry="80" fill="white"/>',
-                    '<ellipse cx="61" cy="282" rx="130" ry="100" fill="white"/>',
-                    '<ellipse cx="471" cy="215" rx="110" ry="85" fill="white"/>',
-                    '<ellipse cx="450" cy="266" rx="140" ry="105" fill="white"/>',
-                    '<ellipse cx="102" cy="333" rx="160" ry="120" fill="white"/>',
-                    '<ellipse cx="256" cy="317" rx="180" ry="130" fill="white"/>',
-                    '<ellipse cx="410" cy="333" rx="150" ry="110" fill="white"/>',
-                    '<ellipse cx="0" cy="435" rx="200" ry="140" fill="white"/>',
-                    '<ellipse cx="102" cy="461" rx="220" ry="150" fill="white"/>',
-                    '<ellipse cx="256" cy="471" rx="230" ry="160" fill="white"/>',
-                    '<ellipse cx="410" cy="450" rx="210" ry="150" fill="white"/>',
-                    '<ellipse cx="512" cy="461" rx="200" ry="140" fill="white"/>',
-                    "</mask></defs>"
-                )
-            );
-    }
-    */
-
-    // OPTIMIZED IMPLEMENTATION - Minimal preview SVG for Blockscout compatibility
-    // Design: "base.is" logo + dynamic phrase below + colored background
-    // Size: ~3 KB Base64
-    function _buildSVGImage(
-        string memory phrase,
-        string memory textColor,
-        string memory backgroundColor
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
-                    // Dynamic background color
-                    '<rect width="512" height="512" fill="',
-                    backgroundColor,
-                    '"/>',
-                    // Wrapper group with slight left offset
-                    '<g transform="translate(-10, 0)">',
-                    // Base logo
-                    _buildLogo(),
-                    // Static ".is" text after logo
-                    '<text x="291" y="232.4" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="900" fill="#000">.is</text>',
-                    "</g>",
-                    // Dynamic phrase below logo
-                    '<text x="256" y="260" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="800" fill="',
-                    textColor,
-                    '">',
-                    _escapeForHTML(phrase),
-                    "</text></svg>"
-                )
-            );
-    }
-
-    // Base logo for static image
-    function _buildLogo() internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '<g transform="translate(231, 220) scale(0.14)">',
-                    '<path d="M122.604 89.6974C115.697 89.6974 109.041 87.1857 105.148 80.5299H102.887V87.8137H87.1895V1.16162H102.887V32.6829H105.148C109.166 25.7758 116.701 23.1386 123.483 23.1386C140.436 23.1386 151.865 36.7015 151.865 55.7901C151.865 75.2554 139.306 89.6974 122.604 89.6974ZM119.213 75.6321C128.883 75.6321 135.79 67.7204 135.79 56.418C135.79 45.1156 128.757 37.2038 119.213 37.2038C109.794 37.2038 102.887 44.7388 102.887 56.418C102.887 68.0972 109.794 75.6321 119.213 75.6321ZM180.874 89.6974C168.818 89.6974 159.023 82.4136 159.023 70.4833C159.023 56.418 169.823 51.897 182.883 50.5156L201.344 48.6319V45.1156C201.344 39.7155 196.949 35.948 189.163 35.948C181.753 35.948 177.483 39.2132 176.102 44.1109H161.032C162.539 32.1805 172.46 23.1386 189.163 23.1386C205.237 23.1386 215.912 30.9247 215.912 46.1202V76.7624C215.912 80.6555 216.288 86.0555 216.54 87.5625V87.8137H201.47C201.344 85.6788 201.344 83.6694 201.344 81.5345H199.084C195.191 87.8137 188.409 89.6974 180.874 89.6974ZM185.144 77.8926C195.442 77.8926 201.344 70.1065 201.344 62.1948V59.0552L187.53 60.6878C178.99 61.6925 174.846 64.2041 174.846 69.7298C174.846 74.8786 179.116 77.8926 185.144 77.8926ZM253.586 89.6974C237.763 89.6974 226.461 81.7857 224.702 69.353H240.149C241.907 74.8786 247.684 77.2647 253.712 77.2647C259.866 77.2647 264.889 74.6275 264.889 69.9809C264.889 65.3344 260.117 64.0785 253.586 62.9483L246.931 61.8181C234.372 59.6831 226.586 54.4087 226.586 43.1062C226.586 30.7991 237.386 23.1386 252.331 23.1386C266.898 23.1386 276.568 29.9201 279.205 41.7248H264.135C262.377 37.0783 257.731 35.1945 252.456 35.1945C246.051 35.1945 241.907 37.9573 241.907 41.8504C241.907 45.8691 245.172 47.1249 251.954 48.2551L258.61 49.3854C270.791 51.3947 280.084 56.418 280.084 68.5995C280.084 81.9113 269.033 89.6974 253.586 89.6974ZM319.392 89.6974C300.052 89.6974 287.243 76.5112 287.243 56.2924C287.243 36.4504 300.806 23.1386 319.517 23.1386C339.108 23.1386 350.411 37.7062 350.411 56.9203V59.6831H302.564C303.317 70.1065 310.601 76.2601 319.392 76.2601C326.676 76.2601 331.071 73.7484 333.206 69.353H349.28C346.015 81.1578 334.336 89.6974 319.392 89.6974ZM335.09 49.2598C333.834 40.8457 327.178 35.948 319.392 35.948C311.229 35.948 304.322 40.7202 302.815 49.2598H335.09Z" fill="#0A0B0D"/>',
-                    '<path d="M4.02139 87.8138C1.50973 87.8138 0.253906 86.558 0.253906 84.0463V28.7899C0.253906 26.2783 1.50973 25.0225 4.02139 25.0225H59.2778C61.7894 25.0225 63.0452 26.2783 63.0452 28.7899V84.0463C63.0452 86.558 61.7894 87.8138 59.2778 87.8138H4.02139Z" fill="#0000FF"/>',
-                    "</g>"
-                )
-            );
-    }
-
-    // Minimal escaping for characters that break HTML (&, <, >, ", ')
-    function _escapeForHTML(
-        string memory value
-    ) internal pure returns (string memory) {
-        bytes memory s = bytes(value);
-        bytes memory out = new bytes(s.length * 6); // worst case (&quot;)
-        uint256 j;
-
-        for (uint256 i = 0; i < s.length; i++) {
-            bytes1 c = s[i];
-            if (c == bytes1("&")) {
-                out[j++] = bytes1("&");
-                out[j++] = bytes1("a");
-                out[j++] = bytes1("m");
-                out[j++] = bytes1("p");
-                out[j++] = bytes1(";");
-            } else if (c == bytes1("<")) {
-                out[j++] = bytes1("&");
-                out[j++] = bytes1("l");
-                out[j++] = bytes1("t");
-                out[j++] = bytes1(";");
-            } else if (c == bytes1(">")) {
-                out[j++] = bytes1("&");
-                out[j++] = bytes1("g");
-                out[j++] = bytes1("t");
-                out[j++] = bytes1(";");
-            } else if (c == bytes1('"')) {
-                out[j++] = bytes1("&");
-                out[j++] = bytes1("q");
-                out[j++] = bytes1("u");
-                out[j++] = bytes1("o");
-                out[j++] = bytes1("t");
-                out[j++] = bytes1(";");
-            } else if (c == bytes1("'")) {
-                out[j++] = bytes1("&");
-                out[j++] = bytes1("#");
-                out[j++] = bytes1("3");
-                out[j++] = bytes1("9");
-                out[j++] = bytes1(";");
-            } else {
-                out[j++] = c;
-            }
-        }
-
-        assembly {
-            mstore(out, j)
-        }
-        return string(out);
-    }
-
     // --- Helper Functions ---
 
     /**
@@ -603,26 +455,13 @@ contract Basefor is ERC721Enumerable, Ownable, ReentrancyGuard, Pausable {
     {
         uint256 len = assets.textColorsCount();
 
-        // Token #0 gets special colors (Base blue variants)
+        // Token #0 gets special colors (blue, yellow, red)
         if (tokenId == 0) {
-            return (
-                assets.getTextColor(32), // blue (#0000FF) - last in array
-                assets.getTextColor(6),  // dark blue (#0037AC)
-                assets.getTextColor(13)  // indigo (#121C61)
-            );
+            return ("#0000FF", "#FFD12F", "#FC401F");
         }
 
         color1 = assets.getTextColor((tokenId * 3) % len);
         color2 = assets.getTextColor((tokenId * 5) % len);
         color3 = assets.getTextColor((tokenId * 11) % len);
-    }
-
-    /**
-     * @notice Get background color for a token using modulo pattern
-     */
-    function _getBackgroundColor(
-        uint256 tokenId
-    ) internal view returns (string memory) {
-        return assets.getBackgroundColor((tokenId * 17) % assets.backgroundColorsCount());
     }
 }

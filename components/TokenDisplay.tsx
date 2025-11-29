@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useReadContract } from "wagmi";
-import { BASEFOR_ABI } from "@/abi/Basefor.abi";
+import { WHATISBASEFOR_ABI } from "@/abi/WhatIsBaseFor.abi";
 import { APP_CONFIG, CONTRACTS } from "@/lib/config";
 
 const ORIGINAL_SIZE = 512; // Original NFT resolution
@@ -14,8 +14,8 @@ export function TokenDisplay() {
   const [scale, setScale] = useState(1);
 
   const { data: tokenURI, error, isLoading } = useReadContract({
-    address: CONTRACTS.BASEFOR,
-    abi: BASEFOR_ABI,
+    address: CONTRACTS.WHATISBASEFOR,
+    abi: WHATISBASEFOR_ABI,
     functionName: "tokenURI",
     args: [BigInt(APP_CONFIG.TOKEN_DISPLAY_ID)],
   });

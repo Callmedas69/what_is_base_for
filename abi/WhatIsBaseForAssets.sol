@@ -2,34 +2,30 @@
 pragma solidity ^0.8.24;
 
 /**
- * @title BaseforAssets
- * @notice CSS, SVG assets, and color palettes for Basefor NFTs
+ * @title WhatIsBaseForAssets
+ * @notice CSS, SVG assets, and color palettes for WhatIsBaseFor NFTs
  */
-contract BaseforAssets {
-    // Background colors (light pastels) - 35 colors
-    string[35] private _backgroundColors = [
-        "#E2E2FF", "#C3F3FD", "#C8F5EA", "#D7F9E6", "#EFF7D3",
-        "#FEEFC9", "#FEE6D8", "#FDE2E9", "#FCE4FD", "#F4E8FF",
-        "#E6E8FF", "#B5CDFF", "#8FE8FB", "#9DEBD9", "#BAF2D0",
-        "#E4F3B0", "#FDE1B3", "#FDC2A5", "#F9B6BC", "#F6B6F1",
-        "#EAC5FE", "#CAD4FF", "#98A9FF", "#71E4FA", "#83E7C9",
-        "#A2ECA9", "#FABC84", "#F39E9D", "#F0A0E6", "#DAB2FD",
-        "#BAC9F4", "#9FB0F0", "#8BA0F2", "#B08EF6", "#C6A0F8"
-    ];
-
-    // Text colors (dark) - 33 colors
-    string[33] private _textColors = [
+contract WhatIsBaseForAssets {
+    // Text colors - 68 colors
+    string[68] private _textColors = [
         "#00174B", "#001A32", "#001E12", "#002578", "#002B4D",
         "#003420", "#0037AC", "#003F69", "#014A2E", "#061910",
         "#090B10", "#090E31", "#0E391F", "#121C61", "#155327",
         "#190600", "#1A0C31", "#1E2E97", "#292E3E", "#300C00",
         "#310003", "#310928", "#331301", "#33175E", "#4E0E3F",
         "#502792", "#512801", "#591700", "#5B0207", "#6A1556",
-        "#802201", "#82050C", "#0000FF"
+        "#802201", "#82050C", "#0000FF", "#E2E2FF", "#C3F3FD",
+        "#C8F5EA", "#D7F9E6", "#EFF7D3", "#FEEFC9", "#FEE6D8",
+        "#E6E8FF", "#B5CDFF", "#8FE8FB", "#9DEBD9", "#BAF2D0",
+        "#E4F3B0", "#FDE1B3", "#FDC2A5", "#F9B6BC", "#F6B6F1",
+        "#EAC5FE", "#CAD4FF", "#98A9FF", "#71E4FA", "#83E7C9",
+        "#A2ECA9", "#FABC84", "#F39E9D", "#F0A0E6", "#DAB2FD",
+        "#BAC9F4", "#9FB0F0", "#8BA0F2", "#B08EF6", "#C6A0F8",
+        "#FDE2E9", "#FCE4FD", "#F4E8FF"
     ];
 
     /**
-     * @notice Returns CSS keyframes for SVG animations with embedded Doto font
+     * @notice Returns CSS for SVG animations with embedded Doto font and hover styles
      */
     function getCSS() external view returns (string memory) {
         return string(abi.encodePacked(
@@ -37,7 +33,23 @@ contract BaseforAssets {
             this.getDotoFont(),
             "') format('woff2');font-weight:700}",
             "@keyframes rotateText{0%,20%{transform:translateY(0)}25%,45%{transform:translateY(-45px)}50%,70%{transform:translateY(-90px)}100%{transform:translateY(0)}}",
-            ".rotator{animation:rotateText 10s ease infinite}"
+            ".rotator{animation:rotateText 10s ease infinite}",
+            ".cell{fill:#ffffff;stroke:#FFFFFF;cursor:pointer;transition:fill 0.2s ease}",
+            ".c0:hover{fill:#0000ff}.c1:hover{fill:#3c8aff}.c2:hover{fill:#b8a581}.c3:hover{fill:#ffd12f}",
+            ".c4:hover{fill:#66c800}.c5:hover{fill:#b6f569}.c6:hover{fill:#fc401f}.c7:hover{fill:#fea8cd}",
+            ".c8:hover{fill:#ffffff}.c9:hover{fill:#eef0f3}.c10:hover{fill:#dee1e7}.c11:hover{fill:#b1b7c3}",
+            ".c12:hover{fill:#717886}.c13:hover{fill:#5b616e}.c14:hover{fill:#32353d}.c15:hover{fill:#0a0b0d}"
+        ));
+    }
+
+    /**
+     * @notice Returns static CSS with only embedded Doto font (no animations or hover)
+     */
+    function getStaticCSS() external view returns (string memory) {
+        return string(abi.encodePacked(
+            "@font-face{font-family:'Doto';src:url('data:font/woff2;base64,",
+            this.getDotoFont(),
+            "') format('woff2');font-weight:700}"
         ));
     }
 
@@ -50,19 +62,11 @@ contract BaseforAssets {
 
     // --- Color Getters ---
 
-    function getBackgroundColor(uint256 index) external view returns (string memory) {
-        return _backgroundColors[index % 35];
-    }
-
     function getTextColor(uint256 index) external view returns (string memory) {
-        return _textColors[index % 33];
-    }
-
-    function backgroundColorsCount() external pure returns (uint256) {
-        return 35;
+        return _textColors[index % 68];
     }
 
     function textColorsCount() external pure returns (uint256) {
-        return 33;
+        return 68;
     }
 }
