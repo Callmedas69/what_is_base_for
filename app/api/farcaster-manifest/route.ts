@@ -22,7 +22,7 @@ export async function GET() {
 
       // Metadata for discoverability
       subtitle: "A fully onchain collection",
-      description: "Express what Base means to you with a unique onchain NFT. Mint your own Base spirit and share your message with the community.",
+      description: "Turns words into identity, and phrases into home",
       primaryCategory: "social",
       tags: ["nft", "base", "onchain", "mint", "art"],
 

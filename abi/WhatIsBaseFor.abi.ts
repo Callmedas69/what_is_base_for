@@ -38,10 +38,10 @@ export const WHATISBASEFOR_ABI = [{ "type": "constructor", "inputs": [{ "name": 
 export const CONTRACT_ADDRESSES = {
   baseMainnet: {
     chainId: 8453,
-    whatIsBaseFor: '0xD02e12F3b901d35F61577AcaDcbF49c7300cf744', // Main NFT contract (ERC721Enumerable)
-    assets: '0x1eD24a8391F8d0AD7D65e4B6Ac42204c67415572', // Assets contract (68 text colors, CSS, static CSS)
-    renderer: '0x7d49891F945e0d03ba29D0fF6Bf1bF1f6AF40441', // Renderer contract (animated + static SVG)
-    phrases: '0x092BA10a2C6ECdb35ba1A00A3F8b34f0260Ba08f', // Phrases registry (299 UPPERCASE phrases)
+    whatIsBaseFor: '0x6eE388cEA7D285bbf376d78a106803298404717B', // Main NFT contract (ERC721Enumerable)
+    assets: '0x3938b363c7f8c37068FE744aAD71cc466a1200CA', // Assets contract (68 text colors, CSS, static CSS)
+    renderer: '0xA5BA4Bf1160F8a284d6FDEe2176359937480B450', // Renderer contract (animated + static SVG)
+    phrases: '0x8dcb082AB23B08B7fD24B6f0AF19957aacAFE277', // Phrases registry (299 UPPERCASE phrases)
     owner: '0x168D8b4f50BB3aA67D05a6937B643004257118ED', // Contract owner + received initial 20 NFTs
     explorer: 'https://base.blockscout.com',
     basescan: 'https://basescan.org',

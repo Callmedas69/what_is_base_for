@@ -63,6 +63,7 @@ contract WhatIsBaseForRenderer {
                 abi.encodePacked(
                     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="auto" font-family="Roboto">',
                     '<style>', assets.getStaticCSS(), '</style>',
+                    '<rect width="100%" height="100%" fill="#fff" />',
                     _buildLogo(),
                     _buildPill(),
                     _buildStaticPhrase(phrase1, textColor1),
