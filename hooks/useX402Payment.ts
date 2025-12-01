@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useOnchainPay } from '@onchainfi/connect';
+import { useOnchainPay, useOnchainWallet } from '@onchainfi/connect';
 import { PAYMENT_CONFIG } from '@/lib/config';
 import type {
   UseX402PaymentResult,
@@ -27,6 +27,9 @@ export function useX402Payment(): UseX402PaymentResult {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Get login function for Privy auth prompt (when external wallet auto-connects without Privy session)
+  const { login } = useOnchainWallet();
 
   // Use OnchainConnect SDK - pay() handles verify + settle in one step
   const { pay } = useOnchainPay({
@@ -116,6 +119,14 @@ export function useX402Payment(): UseX402PaymentResult {
       };
     } catch (error) {
       console.error('[useX402Payment] Payment error:', error);
+
+      // Detect Privy auth error - wallet auto-connected without Privy session
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('No embedded or connected wallet')) {
+        console.log('[useX402Payment] Wallet not authenticated through Privy, prompting login');
+        login(); // Open Privy modal for user to authenticate
+        throw new Error('Please connect your wallet to enable payments');
+      }
 
       // Store failed payment in Supabase for tracking
       try {

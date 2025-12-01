@@ -45,12 +45,15 @@ interface HomeContentProps {
 export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, logPrefix = "[Home]" }: HomeContentProps) {
   // Farcaster context for MiniApp wallet
   const { isFarcaster, wallet: fcWallet } = useFarcaster();
-  // Privy/Onchain wallet for web mode
-  const { isConnected: privyConnected, address: privyAddress } = useOnchainWallet();
+  // OnchainConnect wallet for web mode (Privy)
+  // user object exists only when authenticated through Privy (not wagmi auto-detect)
+  const { isConnected: privyConnected, address: privyAddress, user } = useOnchainWallet();
 
-  // Unified connection state: use Farcaster wallet in MiniApp, Privy in web
-  const isConnected = isFarcaster ? fcWallet.isConnected : privyConnected;
-  const address = (isFarcaster ? fcWallet.address : privyAddress) as `0x${string}` | undefined;
+  // Only show as connected if Privy has a session (not just wagmi auto-detect)
+  // This prevents confusion when multiple wallets are installed
+  const hasPrivySession = !!user;
+  const isConnected = isFarcaster ? fcWallet.isConnected : (privyConnected && hasPrivySession);
+  const address = (isFarcaster ? fcWallet.address : (hasPrivySession ? privyAddress : undefined)) as `0x${string}` | undefined;
 
   // Chain alignment - ensures wallet is on Base network
   const { needsSwitch, promptSwitch, isSwitching } = useChainAlignment('base');

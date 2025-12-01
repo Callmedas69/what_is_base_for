@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useOnchainWallet } from '@onchainfi/connect';
-import { useDisconnect } from 'wagmi';
 import { Wallet } from 'lucide-react';
 import { useFarcaster } from '@/contexts/FarcasterContext';
 
@@ -13,15 +12,17 @@ interface CustomWalletConnectProps {
 export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
   // Farcaster wallet from global context (auto-connects in MiniApp)
   const { isFarcaster, wallet: fcWallet } = useFarcaster();
-  // Privy wallet for web mode
-  const { isConnected: privyConnected, address: privyAddress, login, logout } = useOnchainWallet();
-  const { disconnect } = useDisconnect();
+  // OnchainConnect wallet for web mode (Privy)
+  // user object exists only when authenticated through Privy (not wagmi auto-detect)
+  const { isConnected: privyConnected, address: privyAddress, user, login, logout } = useOnchainWallet();
 
   const [showMenu, setShowMenu] = useState(false);
 
-  // Unified state from context
-  const isConnected = isFarcaster ? fcWallet.isConnected : privyConnected;
-  const address = isFarcaster ? fcWallet.address : privyAddress;
+  // Only show as connected if Privy has a session (not just wagmi auto-detect)
+  // This prevents confusion when multiple wallets are installed
+  const hasPrivySession = !!user;
+  const isConnected = isFarcaster ? fcWallet.isConnected : (privyConnected && hasPrivySession);
+  const address = isFarcaster ? fcWallet.address : (hasPrivySession ? privyAddress : undefined);
 
   function handleClick() {
     if (isConnected) {
@@ -30,8 +31,8 @@ export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
     }
 
     // In MiniApp, wallet auto-connects via FarcasterContext
-    // In web, trigger Privy login
-    if (!isFarcaster) {
+    // In web, trigger Privy login modal
+    if (!isFarcaster && login) {
       login();
     }
   }
@@ -67,7 +68,7 @@ export function CustomWalletConnect({ className }: CustomWalletConnectProps) {
           <div className="px-3 py-2 text-sm text-gray-500 border-b">{short}</div>
           {!isFarcaster && (
             <button
-              onClick={() => { logout(); disconnect(); setShowMenu(false); }}
+              onClick={() => { logout?.(); setShowMenu(false); }}
               className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
             >
               Disconnect
