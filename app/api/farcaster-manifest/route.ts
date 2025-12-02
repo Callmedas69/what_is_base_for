@@ -27,7 +27,7 @@ export async function GET() {
       tags: ["nft", "base", "onchain", "mint", "art"],
 
       // Visual assets
-      heroImageUrl: `${APP_URL}/embed_1200x800.webp`,
+      heroImageUrl: `${APP_URL}/ogHero_1200x630.webp`,
       tagline: "Turns words into identity, and phrases into home",
 
       // OpenGraph metadata
