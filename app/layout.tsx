@@ -6,7 +6,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studi
 
 const farcasterEmbed = {
   version: "1",
-  imageUrl: `${APP_URL}/embed_1200x800.webp`,
+  imageUrl: `${APP_URL}/ogHero_1200x630.webp`,
   button: {
     title: "What is Base for?",
     action: {
