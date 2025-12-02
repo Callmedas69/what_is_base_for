@@ -28,7 +28,7 @@ export async function GET() {
 
       // Visual assets
       heroImageUrl: `${APP_URL}/ogHero_1200x630.webp`,
-      tagline: "Turns words into identity, and phrases into home",
+      tagline: "Your Base, Your Story",
 
       // OpenGraph metadata
       ogTitle: "What is Base for?",
