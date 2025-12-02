@@ -87,6 +87,16 @@ export const APP_CONFIG = {
   AUDIO_PATH: "/assets/What is Base for.mp3",
   TOKEN_DISPLAY_ID: 0, // Which token ID to display in hero
   SHARE_TEXT: "What does Base mean to you, when your words live forever on-chain?",
+  SHARE_TEXTS_AFTER_MINT: [
+    "To me, Base feels like: {phrase1}, {phrase2}, {phrase3}",
+    "My Base is made of: {phrase1}, {phrase2}, {phrase3}",
+    "Base, to my heart, is: {phrase1}, {phrase2}, {phrase3}",
+    "If I describe Base in fragments: {phrase1}, {phrase2}, {phrase3}",
+    "Base, in my own small words: {phrase1}, {phrase2}, {phrase3}",
+    "What Base whispers to me: {phrase1}, {phrase2}, {phrase3}",
+    "Base, in pieces of feeling: {phrase1}, {phrase2}, {phrase3}",
+    "What Base means to me: {phrase1}, {phrase2}, {phrase3}",
+  ],
 } as const;
 
 /**

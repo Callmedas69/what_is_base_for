@@ -75,6 +75,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   const [mintType, setMintType] = useState<"regular" | "custom" | null>(null);
   const [mintedTokenId, setMintedTokenId] = useState<bigint | null>(null);
   const [animationUrl, setAnimationUrl] = useState<string>("");
+  const [mintedPhrases, setMintedPhrases] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [paymentData, setPaymentData] = useState<{
     paymentId: string;
@@ -392,7 +393,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     handleMintFailure();
   }, [isWriteError, isReceiptError, writeError, receiptError, paymentData, mintType, updateMintStatus, refetchPendingMints, resetWrite, logPrefix]);
 
-  // Parse tokenURI for animation_url (animated SVG)
+  // Parse tokenURI for animation_url and phrases
   useEffect(() => {
     if (!tokenURI || typeof tokenURI !== "string") return;
 
@@ -404,6 +405,17 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
         setAnimationUrl(jsonData.animation_url);
       } else if (jsonData.image) {
         setAnimationUrl(jsonData.image);
+      }
+      // Extract phrases from attributes
+      if (jsonData.attributes && Array.isArray(jsonData.attributes)) {
+        const phraseAttrs = jsonData.attributes.filter(
+          (attr: { trait_type: string; value: string }) =>
+            attr.trait_type?.startsWith("Phrase")
+        );
+        const extractedPhrases = phraseAttrs.map(
+          (attr: { value: string }) => attr.value
+        );
+        setMintedPhrases(extractedPhrases);
       }
     } catch (error) {
       console.error("Error parsing tokenURI:", error);
@@ -417,6 +429,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     setMintType(null);
     setMintedTokenId(null);
     setAnimationUrl("");
+    setMintedPhrases([]);
     setPaymentData(null);
     setRetryingMint(null);
     // Note: Don't reset processedReceiptRef - wagmi keeps old receipt, resetting would break guard
@@ -492,6 +505,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
               tokenId={mintedTokenId}
               hash={hash}
               imageUrl={animationUrl}
+              phrases={mintedPhrases}
             />
           )}
         </div>

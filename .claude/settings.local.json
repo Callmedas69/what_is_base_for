@@ -34,7 +34,8 @@
       "WebFetch(domain:wagmi.sh)",
       "Bash(dir /b \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\node_modules\\@onchainfi\\connect\\dist\")",
       "WebFetch(domain:docs.farcaster.xyz)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "WebFetch(domain:warpcast.com)"
     ],
     "deny": [],
     "ask": []

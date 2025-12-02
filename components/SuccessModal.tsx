@@ -13,6 +13,7 @@ interface SuccessModalProps {
   tokenId: bigint;
   hash: `0x${string}`;
   imageUrl?: string;
+  phrases?: string[];
 }
 
 export function SuccessModal({
@@ -21,10 +22,24 @@ export function SuccessModal({
   tokenId,
   hash,
   imageUrl,
+  phrases,
 }: SuccessModalProps) {
   const { isFarcaster, isReady, actions } = useFarcaster();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  // Build personalized share text with minted phrases (random template)
+  const shareText = useMemo(() => {
+    if (phrases && phrases.length >= 3) {
+      const templates = APP_CONFIG.SHARE_TEXTS_AFTER_MINT;
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      return template
+        .replace("{phrase1}", phrases[0])
+        .replace("{phrase2}", phrases[1])
+        .replace("{phrase3}", phrases[2]);
+    }
+    return APP_CONFIG.SHARE_TEXT;
+  }, [phrases]);
 
   // Decode SVG for iframe display (animated SVG support)
   const svgHtml = useMemo(() => {
@@ -134,7 +149,7 @@ export function SuccessModal({
               <span className="text-sm font-medium text-white">OpenSea</span>
             </button>
             <ShareButtons
-              text={APP_CONFIG.SHARE_TEXT}
+              text={shareText}
               url={appUrl}
               imageUrl={imageUrl}
               size="sm"
