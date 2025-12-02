@@ -24,8 +24,9 @@ import { PendingMintsBanner } from "@/components/PendingMintsBanner";
 import { usePendingMints, type PendingMint } from "@/hooks/usePendingMints";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
-const SHARE_TEXT = "What is Base means for you?";
+const SHARE_TEXT = "What does Base mean to you, when your words live forever on-chain?";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
+const FARCASTER_MINIAPP_URL = "https://farcaster.xyz/miniapps/M-pFqSWC17gI/what-is-base-for";
 
 interface HomeContentProps {
   /** True when running inside Farcaster MiniApp */
@@ -439,8 +440,18 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
           <div className="flex flex-col lg:flex-row gap-8 items-center">
             <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-end space-y-3">
               <TokenDisplay />
-              <div className="w-full max-w-md flex justify-center">
+              <div className="w-full max-w-md flex justify-center items-center gap-3">
                 <FloatingDock items={dockItems} />
+                {!isMiniApp && (
+                  <a
+                    href={FARCASTER_MINIAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0052FF] text-white rounded-full font-medium hover:bg-[#0043CC] transition-colors text-sm whitespace-nowrap"
+                  >
+                    MiniApp
+                  </a>
+                )}
               </div>
             </div>
 

@@ -48,7 +48,7 @@ export function Header() {
   }, [isMobile]);
 
   return (
-    <header className="relative z-10 flex flex-row items-center justify-between gap-4 border-b border-[#dee1e7] bg-white px-4 sm:px-6 py-4">
+    <header className="relative z-10 flex flex-row items-center justify-between gap-4 border-b border-[#dee1e7] bg-white px-4 sm:px-6 py-4 h-[72px] sm:h-[80px]">
       {/* Left: Logo - min-w prevents shifting during scramble */}
       <div className="flex flex-col gap-1 cursor-pointer min-w-[100px] sm:min-w-[140px]" onMouseEnter={triggerScramble} onClick={triggerScramble}>
         <h1 className="text-2xl sm:text-2xl lg:text-3xl font-extrabold text-[#0a0b0d] tracking-tight">

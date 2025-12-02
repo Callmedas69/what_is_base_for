@@ -209,20 +209,26 @@ export function CustomMint({
       {/* Phrase Inputs */}
       <div className="space-y-3 md:space-y-2">
         {[0, 1, 2].map((index) => (
-          <input
-            key={index}
-            type="text"
-            value={phrases[index] || ""}
-            onChange={(e) => handlePhraseChange(index, e.target.value)}
-            placeholder={PHRASE_CONFIG.PLACEHOLDER[index]}
-            maxLength={PHRASE_CONFIG.MAX_LENGTH}
-            disabled={isProcessing || isVerifying || isSettling || index >= phraseCount}
-            className={`w-full rounded-lg border px-4 py-3 md:py-2.5 text-[#0a0b0d] placeholder-[#b1b7c3] focus:border-[#0000ff] focus:outline-none transition-all ${
-              index >= phraseCount
-                ? "border-[#eef0f3] bg-[#f9fafb] opacity-50 cursor-not-allowed"
-                : "border-[#dee1e7] bg-white hover:border-[#b1b7c3]"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          />
+          <div key={index} className="relative">
+            <input
+              type="text"
+              value={phrases[index] || ""}
+              onChange={(e) => handlePhraseChange(index, e.target.value)}
+              placeholder={PHRASE_CONFIG.PLACEHOLDER[index]}
+              maxLength={PHRASE_CONFIG.MAX_LENGTH}
+              disabled={isProcessing || isVerifying || isSettling || index >= phraseCount}
+              className={`w-full rounded-lg border px-4 pr-14 py-3 md:py-2.5 text-[#0a0b0d] text-[10px] italic placeholder-[#b1b7c3] focus:border-[#0000ff] focus:outline-none transition-all ${
+                index >= phraseCount
+                  ? "border-[#eef0f3] bg-[#f9fafb] opacity-50 cursor-not-allowed"
+                  : "border-[#dee1e7] bg-white hover:border-[#b1b7c3]"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            />
+            {index < phraseCount && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#5b616e] pointer-events-none">
+                {phrases[index]?.length || 0}/{PHRASE_CONFIG.MAX_LENGTH}
+              </span>
+            )}
+          </div>
         ))}
       </div>
 

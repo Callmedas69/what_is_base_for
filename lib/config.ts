@@ -56,10 +56,12 @@ export const PHRASE_CONFIG = {
   MIN_CUSTOM_COUNT: 1, // At least 1 non-empty required
   TOTAL_COUNT: 3,
   PLACEHOLDER: [
-    "e.g., based, freedom, onchain",
-    "e.g., you, me, all of us",
-    "e.g., vibes, spirit, culture",
+    "A word like 'freedom' (≤15 chars)",
+    "Something small, like 'us' (≤15 chars)",
+    "A tiny feeling, like 'vibes' (≤15 chars)",
   ],
+
+
 } as const;
 
 /**

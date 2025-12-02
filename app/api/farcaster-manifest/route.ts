@@ -20,7 +20,6 @@ export async function GET() {
       imageUrl: `${APP_URL}/ogHero_1200x630.webp`,
       splashImageUrl: `${APP_URL}/splash_200x200.png`,
       splashBackgroundColor: "#ffffff",
-
       button: {
         title: "What is Base for?",
         action: {
@@ -31,7 +30,6 @@ export async function GET() {
           splashBackgroundColor: "#ffffff",
         },
       },
-
       // Metadata for discoverability
       subtitle: "A fully onchain collection",
       description: "Turns words into identity, and phrases into home",
@@ -40,12 +38,17 @@ export async function GET() {
 
       // Visual assets
       heroImageUrl: `${APP_URL}/ogHero_1200x630.webp`,
-      tagline: "Your Base, Your Story",
+      tagline: "Where Your Story Lives Onchain",
 
       // OpenGraph metadata
       ogTitle: "What is Base for?",
       ogDescription: "Turns words into identity, and phrases into home",
       ogImageUrl: `${APP_URL}/ogHero_1200x630.webp`,
+
+      // Screenshots
+      screenshotUrls: [`${APP_URL}/S1.png`, `${APP_URL}/S2.png`, `${APP_URL}/S3.png`],
+
+      noindex: false,
     },
   };
 
