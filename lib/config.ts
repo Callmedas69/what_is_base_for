@@ -52,7 +52,7 @@ export const MINT_LIMITS = {
  */
 export const PHRASE_CONFIG = {
   MIN_LENGTH: 0, // Empty allowed (auto-filled with random)
-  MAX_LENGTH: 13,
+  MAX_LENGTH: 15,
   MIN_CUSTOM_COUNT: 1, // At least 1 non-empty required
   TOTAL_COUNT: 3,
   PLACEHOLDER: [
