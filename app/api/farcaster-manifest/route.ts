@@ -17,8 +17,20 @@ export async function GET() {
       name: "What is Base for?",
       homeUrl: APP_URL,
       iconUrl: `${APP_URL}/icon_1024x1024.png`,
+      imageUrl: `${APP_URL}/ogHero_1200x630.webp`,
       splashImageUrl: `${APP_URL}/splash_200x200.png`,
       splashBackgroundColor: "#ffffff",
+
+      button: {
+        title: "What is Base for?",
+        action: {
+          type: "launch_frame",
+          name: "What is Base for?",
+          url: APP_URL,
+          splashImageUrl: `${APP_URL}/splash_200x200.png`,
+          splashBackgroundColor: "#ffffff",
+        },
+      },
 
       // Metadata for discoverability
       subtitle: "A fully onchain collection",
@@ -44,3 +56,4 @@ export async function GET() {
     },
   });
 }
+
