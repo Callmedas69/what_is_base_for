@@ -3,8 +3,7 @@
 import { useEffect, useCallback } from "react";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { HomeContent } from "@/components/HomeContent";
-
-const SHARE_TEXT = "What is Base means for you?";
+import { APP_CONFIG } from "@/lib/config";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
 
 /**
@@ -27,7 +26,7 @@ export default function MiniAppScreen() {
 
   // Handle Farcaster share using context action
   const handleFarcasterShare = useCallback(async () => {
-    await actions.composeCast(SHARE_TEXT, [APP_URL]);
+    await actions.composeCast(APP_CONFIG.SHARE_TEXT, [APP_URL]);
   }, [actions]);
 
   // Handle external URL opening using context action

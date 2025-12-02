@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { CONTRACTS, CHAIN_CONFIG } from "@/lib/config";
+import { CONTRACTS, CHAIN_CONFIG, APP_CONFIG } from "@/lib/config";
 import { ShareButtons } from "./ShareButtons";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
@@ -44,7 +44,6 @@ export function SuccessModal({
   const openSeaUrl = `https://opensea.io/assets/base/${contractAddress}/${tokenIdString}`;
   const txUrl = `${CHAIN_CONFIG.BASESCAN}/tx/${hash}`;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
-  const shareText = `What is Base for?`;
 
   // Handle external link clicks - use SDK in MiniApp, regular link in web
   const handleOpenUrl = async (url: string) => {
@@ -135,7 +134,7 @@ export function SuccessModal({
               <span className="text-sm font-medium text-white">OpenSea</span>
             </button>
             <ShareButtons
-              text={shareText}
+              text={APP_CONFIG.SHARE_TEXT}
               url={appUrl}
               imageUrl={imageUrl}
               size="sm"

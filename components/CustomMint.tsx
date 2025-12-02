@@ -224,7 +224,7 @@ export function CustomMint({
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             />
             {index < phraseCount && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#5b616e] pointer-events-none">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] italic text-[#5b616e]/80 pointer-events-none">
                 {phrases[index]?.length || 0}/{PHRASE_CONFIG.MAX_LENGTH}
               </span>
             )}

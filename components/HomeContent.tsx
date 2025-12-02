@@ -11,7 +11,7 @@ import { useOnchainWallet, useChainAlignment } from "@onchainfi/connect";
 import { parseEventLogs } from "viem";
 import { toast } from "sonner";
 import { WHATISBASEFOR_ABI } from "@/abi/WhatIsBaseFor.abi";
-import { CONTRACTS, MESSAGES, MINT_LIMITS } from "@/lib/config";
+import { CONTRACTS, MESSAGES, MINT_LIMITS, APP_CONFIG } from "@/lib/config";
 import { useX402Payment } from "@/hooks/useX402Payment";
 import { Header } from "@/components/Header";
 import { AudioVisualizer } from "@/components/AudioVisualizer";
@@ -24,7 +24,6 @@ import { PendingMintsBanner } from "@/components/PendingMintsBanner";
 import { usePendingMints, type PendingMint } from "@/hooks/usePendingMints";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
-const SHARE_TEXT = "What does Base mean to you, when your words live forever on-chain?";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
 const FARCASTER_MINIAPP_URL = "https://farcaster.xyz/miniapps/M-pFqSWC17gI/what-is-base-for";
 
@@ -155,8 +154,8 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
   // URL constants for dock items
   const OPENSEA_URL = `https://opensea.io/assets/base/${CONTRACTS.WHATISBASEFOR}`;
   const ONCHAINCHECKER_URL = `https://onchainchecker.xyz/collection/base/${CONTRACTS.WHATISBASEFOR}/0`;
-  const FARCASTER_SHARE_URL = `https://warpcast.com/~/compose?text=${encodeURIComponent(SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`;
-  const X_SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`;
+  const FARCASTER_SHARE_URL = `https://warpcast.com/~/compose?text=${encodeURIComponent(APP_CONFIG.SHARE_TEXT)}&embeds[]=${encodeURIComponent(APP_URL)}`;
+  const X_SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(APP_CONFIG.SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`;
 
   // Build dock items based on mode
   // MiniApp: use sdk.actions.openUrl() for external links, sdk.actions.composeCast() for Farcaster share
