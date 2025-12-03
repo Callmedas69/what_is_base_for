@@ -52,7 +52,7 @@ export const MINT_LIMITS = {
  */
 export const PHRASE_CONFIG = {
   MIN_LENGTH: 0, // Empty allowed (auto-filled with random)
-  MAX_LENGTH: 13,
+  MAX_LENGTH: 15,
   MIN_CUSTOM_COUNT: 1, // At least 1 non-empty required
   TOTAL_COUNT: 3,
   PLACEHOLDER: [
@@ -86,7 +86,7 @@ export const APP_CONFIG = {
   DESCRIPTION: "A fully onchain collection of base spirits",
   AUDIO_PATH: "/assets/What is Base for.mp3",
   TOKEN_DISPLAY_ID: 0, // Which token ID to display in hero
-  SHARE_TEXT: "What does Base mean to you, when your words live forever on-chain?",
+  SHARE_TEXT: "What does Base mean to you, when your words live forever onchain?",
   SHARE_TEXTS_AFTER_MINT: [
     "To me, Base feels like: {phrase1}, {phrase2}, {phrase3}",
     "My Base is made of: {phrase1}, {phrase2}, {phrase3}",
