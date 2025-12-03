@@ -19,8 +19,7 @@ const GEOART_LINKS = [
 
 export function ProfileBadge() {
   return (
-    <div className="w-full flex justify-center py-4 px-4 md:px-6 italic">
-      <HoverCard>
+    <HoverCard>
         <HoverCardTrigger asChild>
           <button className="text-sm font-medium text-[#5b616e] hover:text-[#0a0b0d] transition-colors">
             @0xdas
@@ -91,6 +90,5 @@ export function ProfileBadge() {
           </div>
         </HoverCardContent>
       </HoverCard>
-    </div>
   );
 }

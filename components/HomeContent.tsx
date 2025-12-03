@@ -22,6 +22,7 @@ import { MintSection } from "@/components/MintSection";
 import { SuccessModal } from "@/components/SuccessModal";
 import { FloatingDock, DockItem } from "@/components/ui/floating-dock";
 import { ProfileBadge } from "@/components/ProfileBadge";
+import { TotalSupply } from "@/components/TotalSupply";
 import { PendingMintsBanner } from "@/components/PendingMintsBanner";
 import { usePendingMints, type PendingMint } from "@/hooks/usePendingMints";
 import { useFarcaster } from "@/contexts/FarcasterContext";
@@ -524,7 +525,10 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
         </div>
       </main>
 
-      <ProfileBadge />
+      <div className="w-full flex justify-between items-center py-4 px-4 md:px-6">
+        <TotalSupply totalSupply={totalSupply} />
+        <ProfileBadge />
+      </div>
     </div>
   );
 }

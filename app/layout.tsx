@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import { Doto } from "next/font/google";
 import { FarcasterMiniAppProvider } from "@/contexts/FarcasterContext";
 import "./globals.css";
+
+const doto = Doto({
+  subsets: ["latin"],
+  variable: "--font-doto",
+});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://basefor.geoart.studio";
 
@@ -57,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <meta name="apple-mobile-web-app-title" content="Basefor" />
-      <body className="font-sans antialiased">
+      <body className={`font-sans antialiased ${doto.variable}`}>
         <FarcasterMiniAppProvider>
           {children}
         </FarcasterMiniAppProvider>
