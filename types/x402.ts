@@ -145,6 +145,7 @@ export interface FarcasterUserStats {
 export interface UseX402PaymentResult {
   /**
    * Step 1: Verify payment authorization (user signs EIP-712)
+   * Payment is settled automatically by x402 API
    */
   verifyPayment: (
     phraseCount: PhraseCount,
@@ -157,14 +158,7 @@ export interface UseX402PaymentResult {
     paymentHeader: string;
   }>;
   /**
-   * Step 2: Settle payment BEFORE minting (funds transferred)
-   */
-  settlePayment: (
-    paymentId: string,
-    paymentHeader: string
-  ) => Promise<void>;
-  /**
-   * Step 4: Record successful mint in database (after on-chain mint)
+   * Step 2: Record successful mint in database (after on-chain mint)
    */
   recordMintSuccess: (
     paymentId: string,
@@ -181,7 +175,6 @@ export interface UseX402PaymentResult {
     errorCode?: string
   ) => Promise<void>;
   isVerifying: boolean;
-  isSettling: boolean;
   isUpdating: boolean;
 }
 

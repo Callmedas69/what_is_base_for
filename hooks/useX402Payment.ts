@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSignTypedData } from 'wagmi';
 import { createWalletClient, custom, parseUnits, encodePacked, keccak256 } from 'viem';
 import { base } from 'viem/chains';
@@ -15,6 +15,26 @@ import type {
   PaymentVerifyResponse,
   UpdateMintStatusResponse,
 } from '@/types/x402';
+
+// Fetch with timeout helper
+const fetchWithTimeout = async (
+  url: string,
+  options: RequestInit,
+  timeoutMs = 30000
+): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
 
 // x402 Configuration for Base Mainnet
 const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const;
@@ -48,13 +68,11 @@ const TRANSFER_AUTH_TYPES = {
  *
  * Payment flow:
  * 1. verifyPayment() - User signs EIP-712 authorization + API verify/settle
- * 2. settlePayment() - Already settled by API (just for logging)
- * 3. mint() - On-chain NFT mint
- * 4. recordMintSuccess() - Update DB with tokenId + txHash
+ * 2. mint() - On-chain NFT mint
+ * 3. recordMintSuccess() - Update DB with tokenId + txHash
  */
 export function useX402Payment(): UseX402PaymentResult {
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isSettling, setIsSettling] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const { isFarcaster } = useFarcaster();
@@ -168,23 +186,24 @@ export function useX402Payment(): UseX402PaymentResult {
       const { paymentHeader } = await createX402Signature(amount, walletAddress);
       console.log('[useX402Payment] Signature created, calling x402 API...');
 
-      // Step 2: Call x402 /pay endpoint (verify + settle in one call)
-      const x402Response = await fetch('https://api.onchain.fi/v1/pay', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '',
+      // Step 2: Call backend /pay endpoint (proxies to Onchain.fi, keeps API key server-side)
+      const x402Response = await fetchWithTimeout(
+        '/api/x402/pay',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentHeader,
+            to: PAYMENT_CONFIG.RECIPIENT,
+            sourceNetwork: 'base',
+            destinationNetwork: 'base',
+            expectedAmount: amount,
+            expectedToken: 'USDC',
+            priority: 'balanced',
+          }),
         },
-        body: JSON.stringify({
-          paymentHeader,
-          to: PAYMENT_CONFIG.RECIPIENT,
-          sourceNetwork: 'base',
-          destinationNetwork: 'base',
-          expectedAmount: amount,
-          expectedToken: 'USDC',
-          priority: 'balanced',
-        }),
-      });
+        30000 // 30 second timeout
+      );
 
       const x402Data = await x402Response.json();
 
@@ -205,20 +224,24 @@ export function useX402Payment(): UseX402PaymentResult {
       const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';
 
       // Store payment details in Supabase
-      const response = await fetch('/api/x402/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId,
-          paymentHeader: txHash,
-          phraseCount,
-          phrases,
-          walletAddress: walletAddress.toLowerCase(),
-          farcasterFid: farcasterContext?.fid || undefined,
-          farcasterUsername: farcasterContext?.username || undefined,
-          sourcePlatform,
-        }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/x402/verify',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId,
+            paymentHeader: txHash,
+            phraseCount,
+            phrases,
+            walletAddress: walletAddress.toLowerCase(),
+            farcasterFid: farcasterContext?.fid || undefined,
+            farcasterUsername: farcasterContext?.username || undefined,
+            sourcePlatform,
+          }),
+        },
+        15000 // 15 second timeout for DB operations
+      );
 
       const data: PaymentVerifyResponse = await response.json();
 
@@ -240,44 +263,33 @@ export function useX402Payment(): UseX402PaymentResult {
       // Store failed payment in Supabase for tracking
       try {
         const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';
-        await fetch('/api/x402/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            paymentId: `failed_${Date.now()}`,
-            paymentHeader: '',
-            phraseCount,
-            phrases,
-            walletAddress: walletAddress.toLowerCase(),
-            farcasterFid: farcasterContext?.fid,
-            farcasterUsername: farcasterContext?.username,
-            sourcePlatform,
-            paymentStatus: 'failed',
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          }),
-        });
-        console.log('[useX402Payment] Failed payment stored for tracking');
+        await fetchWithTimeout(
+          '/api/x402/verify',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              paymentId: `failed_${Date.now()}`,
+              paymentHeader: '',
+              phraseCount,
+              phrases,
+              walletAddress: walletAddress.toLowerCase(),
+              farcasterFid: farcasterContext?.fid,
+              farcasterUsername: farcasterContext?.username,
+              sourcePlatform,
+              paymentStatus: 'failed',
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            }),
+          },
+          10000 // 10 second timeout for error tracking
+        );
       } catch (dbError) {
-        console.error('[useX402Payment] Failed to store failed payment:', dbError);
+        // Silent fail - don't block error flow for tracking failure
       }
 
       throw error;
     } finally {
       setIsVerifying(false);
-    }
-  };
-
-  /**
-   * Settlement confirmation (logging only)
-   * x402 API already handles settlement - this is just for debugging
-   */
-  const settlePayment = async (paymentId: string, _paymentHeader: string) => {
-    setIsSettling(true);
-    try {
-      // x402 API already handles settlement - this is just for logging
-      console.log('[useX402Payment] Settlement confirmed (handled by x402 API):', { paymentId });
-    } finally {
-      setIsSettling(false);
     }
   };
 
@@ -298,16 +310,20 @@ export function useX402Payment(): UseX402PaymentResult {
         txHash: `${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
       });
 
-      const response = await fetch('/api/x402/update-mint-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId,
-          mintStatus: 'minted',
-          tokenId: tokenId.toString(),
-          txHash,
-        }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/x402/update-mint-status',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId,
+            mintStatus: 'minted',
+            tokenId: tokenId.toString(),
+            txHash,
+          }),
+        },
+        15000 // 15 second timeout
+      );
 
       const data: UpdateMintStatusResponse = await response.json();
 
@@ -335,22 +351,20 @@ export function useX402Payment(): UseX402PaymentResult {
   ) => {
     setIsUpdating(true);
     try {
-      console.log('[useX402Payment] Updating mint status:', {
-        paymentId,
-        mintStatus,
-        hasError: !!errorMessage,
-      });
-
-      const response = await fetch('/api/x402/update-mint-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId,
-          mintStatus,
-          errorMessage,
-          errorCode,
-        }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/x402/update-mint-status',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId,
+            mintStatus,
+            errorMessage,
+            errorCode,
+          }),
+        },
+        15000 // 15 second timeout
+      );
 
       const data: UpdateMintStatusResponse = await response.json();
 
@@ -369,11 +383,9 @@ export function useX402Payment(): UseX402PaymentResult {
 
   return {
     verifyPayment,
-    settlePayment,
     recordMintSuccess,
     updateMintStatus,
     isVerifying,
-    isSettling,
     isUpdating,
   };
 }

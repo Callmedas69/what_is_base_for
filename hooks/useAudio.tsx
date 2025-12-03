@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useRef, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import { APP_CONFIG } from "@/lib/config";
 
 interface AudioContextType {
@@ -47,8 +47,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [isPlaying]);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(
+    () => ({ isPlaying, togglePlay }),
+    [isPlaying, togglePlay]
+  );
+
   return (
-    <AudioContext.Provider value={{ isPlaying, togglePlay }}>
+    <AudioContext.Provider value={value}>
       {children}
     </AudioContext.Provider>
   );

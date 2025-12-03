@@ -45,7 +45,7 @@ export function CustomMint({
 
   const clientConnected = mounted && isConnected;
 
-  const { verifyPayment, settlePayment, updateMintStatus, isVerifying, isSettling } = useX402Payment();
+  const { verifyPayment, updateMintStatus, isVerifying } = useX402Payment();
 
   // Ref to prevent double verify and store verified payment data
   const paymentFlowRef = useRef<{
@@ -137,20 +137,7 @@ export function CustomMint({
       paymentFlowRef.current.paymentId = verifyResult.paymentId;
       paymentFlowRef.current.paymentHeader = verifyResult.paymentHeader;
 
-      console.log("[CustomMint] Payment verified:", verifyResult.paymentId);
-      console.log("[AFTER VERIFY] paymentData:", JSON.stringify(verifyResult, null, 2));
-      console.log("[AFTER VERIFY] paymentHeader:", verifyResult.paymentHeader);
-
-      // Step 2: Settle payment using ref values (prevents race condition overwrites)
-      console.log("[CustomMint] Step 2: Settling payment...");
-      await settlePayment(
-        paymentFlowRef.current.paymentId!,
-        paymentFlowRef.current.paymentHeader!
-      );
-      console.log("[CustomMint] Payment settled successfully");
-
-      // Step 3: Trigger mint (payment already secured)
-      console.log("[CustomMint] Step 3: Initiating mint...");
+      // Step 2: Trigger mint (payment already settled by x402 API)
       onMint({
         paymentId: paymentFlowRef.current.paymentId!,
         paymentHeader: paymentFlowRef.current.paymentHeader!,
@@ -185,7 +172,7 @@ export function CustomMint({
   };
 
   const maxedOut = remainingMints <= 0;
-  const isDisabled = !clientConnected || isProcessing || isVerifying || isSettling || isPaused || isSoldOut || maxedOut || insufficientBalance;
+  const isDisabled = !clientConnected || isProcessing || isVerifying || isPaused || isSoldOut || maxedOut || insufficientBalance;
 
   return (
     <div className="space-y-4">
@@ -216,7 +203,7 @@ export function CustomMint({
               onChange={(e) => handlePhraseChange(index, e.target.value)}
               placeholder={PHRASE_CONFIG.PLACEHOLDER[index]}
               maxLength={PHRASE_CONFIG.MAX_LENGTH}
-              disabled={isProcessing || isVerifying || isSettling || index >= phraseCount}
+              disabled={isProcessing || isVerifying || index >= phraseCount}
               className={`w-full rounded-lg border px-4 pr-14 py-3 md:py-2.5 text-[#0a0b0d] text-[10px] italic placeholder-[#b1b7c3] focus:border-[#0000ff] focus:outline-none transition-all ${
                 index >= phraseCount
                   ? "border-[#eef0f3] bg-[#f9fafb] opacity-50 cursor-not-allowed"
@@ -242,8 +229,6 @@ export function CustomMint({
           ? "Wallet Required"
           : isVerifying
           ? MESSAGES.PAYMENT_VERIFYING
-          : isSettling
-          ? "Settling Payment..."
           : isMinting
           ? MESSAGES.MINTING
           : isPaused

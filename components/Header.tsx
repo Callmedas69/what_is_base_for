@@ -45,7 +45,7 @@ export function Header() {
     triggerScramble();
     const interval = setInterval(triggerScramble, 7000);
     return () => clearInterval(interval);
-  }, [isMobile]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <header className="relative z-10 flex flex-row items-center justify-between gap-4 border-b border-[#dee1e7] bg-white px-4 sm:px-6 py-4 h-[72px] sm:h-[80px]">

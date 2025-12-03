@@ -1,22 +1,37 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
 
 export function useScrambleText(originalText: string, duration = 600) {
   const [displayText, setDisplayText] = useState(originalText);
   const isAnimatingRef = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   const scramble = useCallback(() => {
     if (isAnimatingRef.current) return;
     isAnimatingRef.current = true;
 
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     const iterations = 10;
     const intervalTime = duration / iterations;
     let count = 0;
 
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setDisplayText(
         originalText
           .split("")
@@ -33,7 +48,10 @@ export function useScrambleText(originalText: string, duration = 600) {
 
       count++;
       if (count > iterations) {
-        clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         setDisplayText(originalText);
         isAnimatingRef.current = false;
       }

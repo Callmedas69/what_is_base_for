@@ -31,11 +31,13 @@ export async function GET(req: NextRequest) {
     console.log('[x402/pending-mints] Fetching for wallet:', walletAddress.slice(0, 10) + '...');
 
     // Query pending_mints VIEW (settled payments with failed mints)
+    // Limit to 50 most recent to prevent payload bloat
     const { data, error } = await supabase
       .from('pending_mints')
-      .select('*')
+      .select('payment_id, id, phrases, phrase_count, amount_usdc, failed_at, error_message, error_code, created_at')
       .eq('wallet_address', walletAddress)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50);
 
     if (error) {
       console.error('[x402/pending-mints] Database error:', error);
