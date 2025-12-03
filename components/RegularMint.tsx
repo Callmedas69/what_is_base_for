@@ -34,7 +34,7 @@ export function RegularMint({
   const clientConnected = mounted && isConnected;
 
   const isDisabled =
-    !clientConnected || isProcessing || alreadyMinted || isPaused || isSoldOut;
+    !clientConnected || isProcessing || isMinting || alreadyMinted || isPaused || isSoldOut;
 
   return (
     <div className="space-y-3">
