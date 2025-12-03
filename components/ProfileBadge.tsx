@@ -21,15 +21,15 @@ export function ProfileBadge() {
   return (
     <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="text-sm font-medium text-[#5b616e] hover:text-[#0a0b0d] transition-colors">
-            @0xdas
+          <button className="text-[10px] italic font-medium text-[#5b616e] hover:text-[#0a0b0d] transition-colors">
+            @0XDAS
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-auto" side="top">
           <div className="flex gap-6">
             {/* Personal */}
             <div className="flex gap-3">
-              <div className="h-10 w-10 flex-shrink-0 rounded-full overflow-hidden shadow-md">
+              <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden shadow-md">
                 <Image
                   src="/oxdas_avatar.png"
                   alt="0xdas"

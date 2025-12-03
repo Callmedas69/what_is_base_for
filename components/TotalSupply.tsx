@@ -7,7 +7,7 @@ interface TotalSupplyProps {
 export function TotalSupply({ totalSupply = 0n }: TotalSupplyProps) {
   return (
     <div className="font-(--font-doto) text-[10px] text-[#5b616e] italic">
-      {totalSupply.toLocaleString()}
+      {totalSupply.toLocaleString()} MINTED
     </div>
   );
 }

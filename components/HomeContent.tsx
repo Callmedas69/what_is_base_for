@@ -24,6 +24,7 @@ import { FloatingDock, DockItem } from "@/components/ui/floating-dock";
 import { ProfileBadge } from "@/components/ProfileBadge";
 import { TotalSupply } from "@/components/TotalSupply";
 import { PendingMintsBanner } from "@/components/PendingMintsBanner";
+import { AboutModal } from "@/components/AboutModal";
 import { usePendingMints, type PendingMint } from "@/hooks/usePendingMints";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
@@ -96,6 +97,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     paymentHeader: string;
   } | null>(null);
   const [retryingMint, setRetryingMint] = useState<PendingMint | null>(null);
+  const [showAboutModal, setShowAboutModal] = useState(false);
   const processedReceiptRef = useRef<string | null>(null);
 
   const {
@@ -525,10 +527,20 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
         </div>
       </main>
 
-      <div className="w-full flex justify-between items-center py-4 px-4 md:px-6">
+      <div className="w-full flex flex-col items-center gap-2 py-4 px-4 md:flex-row md:justify-between md:px-6">
         <TotalSupply totalSupply={totalSupply} />
-        <ProfileBadge />
+        <div className="flex items-center gap-4">
+          <ProfileBadge />
+          <button
+            onClick={() => setShowAboutModal(true)}
+            className="font-(--font-doto) text-[10px] text-[#5b616e] italic hover:text-[#0a0b0d] transition-colors"
+          >
+            ABOUT
+          </button>
+        </div>
       </div>
+
+      <AboutModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
     </div>
   );
 }
