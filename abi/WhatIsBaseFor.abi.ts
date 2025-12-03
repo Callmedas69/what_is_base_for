@@ -47,7 +47,7 @@ export const CONTRACT_ADDRESSES = {
     basescan: 'https://basescan.org',
     maxSupply: 50000,
     maxPerWallet: 23,
-    maxRegularMint: 3, // Predefined phrases: max 3 mints
+    maxRegularMint: 1, // Predefined phrases: max 1 free mint
     maxCustomMint: 20, // Custom phrases: max 20 mints
     initialMint: 20 // 20 NFTs minted at deployment (tokens #0-19)
   }

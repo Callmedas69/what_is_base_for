@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useOnchainPay, useOnchainWallet } from '@onchainfi/connect';
+import { useSignTypedData } from 'wagmi';
+import { createWalletClient, custom, parseUnits, encodePacked, keccak256 } from 'viem';
+import { base } from 'viem/chains';
+import { sdk } from '@farcaster/miniapp-sdk';
+import { useFarcaster } from '@/contexts/FarcasterContext';
 import { PAYMENT_CONFIG } from '@/lib/config';
 import type {
   UseX402PaymentResult,
@@ -12,14 +16,39 @@ import type {
   UpdateMintStatusResponse,
 } from '@/types/x402';
 
+// x402 Configuration for Base Mainnet
+const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const;
+const INTERMEDIATE_ADDRESS = '0xfeb1F8F7F9ff37B94D14c88DE9282DA56b3B1Cb1' as const;
+
+// EIP-712 Domain for USDC on Base (ERC-3009)
+const USDC_DOMAIN = {
+  name: 'USD Coin',
+  version: '2',
+  chainId: 8453,
+  verifyingContract: USDC_ADDRESS,
+} as const;
+
+// ERC-3009 TransferWithAuthorization types
+const TRANSFER_AUTH_TYPES = {
+  TransferWithAuthorization: [
+    { name: 'from', type: 'address' },
+    { name: 'to', type: 'address' },
+    { name: 'value', type: 'uint256' },
+    { name: 'validAfter', type: 'uint256' },
+    { name: 'validBefore', type: 'uint256' },
+    { name: 'nonce', type: 'bytes32' },
+  ],
+} as const;
+
 /**
- * X402 Payment Hook
- * Handles payment with Onchain.fi SDK using one-step pay() method
- * Includes Farcaster miniapp support
+ * X402 Payment Hook (Standalone Implementation)
  *
- * Payment flow for custom mint:
- * 1. verifyPayment() - SDK pay() (user signs + funds transfer in one step)
- * 2. settlePayment() - Just updates DB status (SDK already settled via pay())
+ * Uses manual EIP-712 signing + x402 API for payments.
+ * Works with both RainbowKit (web) and Farcaster wallet (MiniApp).
+ *
+ * Payment flow:
+ * 1. verifyPayment() - User signs EIP-712 authorization + API verify/settle
+ * 2. settlePayment() - Already settled by API (just for logging)
  * 3. mint() - On-chain NFT mint
  * 4. recordMintSuccess() - Update DB with tokenId + txHash
  */
@@ -28,24 +57,92 @@ export function useX402Payment(): UseX402PaymentResult {
   const [isSettling, setIsSettling] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Get login function for Privy auth prompt (when external wallet auto-connects without Privy session)
-  const { login } = useOnchainWallet();
-
-  // Use OnchainConnect SDK - pay() handles verify + settle in one step
-  const { pay } = useOnchainPay({
-    callbacks: {
-      onSigningStart: () => console.log('[useX402Payment] Opening wallet for signing...'),
-      onSigningComplete: () => console.log('[useX402Payment] Signed!'),
-      onVerificationStart: () => console.log('[useX402Payment] Verifying payment...'),
-      onVerificationComplete: () => console.log('[useX402Payment] Payment verified!'),
-      onSettlementStart: () => console.log('[useX402Payment] Settling payment...'),
-      onSettlementComplete: () => console.log('[useX402Payment] Payment settled!'),
-    },
-  });
+  const { isFarcaster } = useFarcaster();
+  const { signTypedDataAsync } = useSignTypedData();
 
   /**
-   * Process payment with Onchain.fi using one-step pay()
-   * This handles both authorization AND fund transfer
+   * Create EIP-712 signature for x402 payment
+   */
+  const createX402Signature = async (
+    amount: string,
+    walletAddress: string
+  ): Promise<{ signature: string; authorization: any; paymentHeader: string }> => {
+    // Generate unique nonce using keccak256(address + timestamp)
+    const nonce = keccak256(
+      encodePacked(
+        ['address', 'uint256'],
+        [walletAddress as `0x${string}`, BigInt(Date.now())]
+      )
+    );
+
+    const now = Math.floor(Date.now() / 1000);
+    const authorization = {
+      from: walletAddress as `0x${string}`,
+      to: INTERMEDIATE_ADDRESS,
+      value: parseUnits(amount, 6), // USDC has 6 decimals
+      validAfter: BigInt(0),
+      validBefore: BigInt(now + 3600), // 1 hour validity
+      nonce,
+    };
+
+    let signature: string;
+
+    if (isFarcaster) {
+      // MiniApp: Use Farcaster wallet provider
+      console.log('[useX402Payment] Signing with Farcaster wallet...');
+      const provider = await sdk.wallet.getEthereumProvider();
+      if (!provider) {
+        throw new Error('Farcaster wallet not available');
+      }
+      const client = createWalletClient({
+        chain: base,
+        transport: custom(provider),
+        account: walletAddress as `0x${string}`,
+      });
+
+      signature = await client.signTypedData({
+        domain: USDC_DOMAIN,
+        types: TRANSFER_AUTH_TYPES,
+        primaryType: 'TransferWithAuthorization',
+        message: authorization,
+      });
+    } else {
+      // Web: Use wagmi (RainbowKit)
+      console.log('[useX402Payment] Signing with RainbowKit wallet...');
+      signature = await signTypedDataAsync({
+        domain: USDC_DOMAIN,
+        types: TRANSFER_AUTH_TYPES,
+        primaryType: 'TransferWithAuthorization',
+        message: authorization,
+      });
+    }
+
+    // Create base64-encoded payment header
+    const paymentHeader = Buffer.from(
+      JSON.stringify({
+        x402Version: 1,
+        scheme: 'exact',
+        network: 'base',
+        payload: {
+          signature,
+          authorization: {
+            from: authorization.from,
+            to: authorization.to,
+            value: authorization.value.toString(),
+            validAfter: authorization.validAfter.toString(),
+            validBefore: authorization.validBefore.toString(),
+            nonce: authorization.nonce,
+          },
+        },
+      })
+    ).toString('base64');
+
+    return { signature, authorization, paymentHeader };
+  };
+
+  /**
+   * Process payment with x402 protocol
+   * Signs EIP-712 authorization and calls x402 API
    */
   const verifyPayment = async (
     phraseCount: PhraseCount,
@@ -63,26 +160,46 @@ export function useX402Payment(): UseX402PaymentResult {
         phrasesCount: phrases.length,
         walletAddress: `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
         hasFarcasterContext: !!farcasterContext?.fid,
+        isFarcaster,
       });
 
-      // Use one-step pay() - handles verify + settle together
-      const payResult = await pay({
-        to: PAYMENT_CONFIG.RECIPIENT,
-        amount,
+      // Step 1: Create EIP-712 signature
+      console.log('[useX402Payment] Creating EIP-712 signature...');
+      const { paymentHeader } = await createX402Signature(amount, walletAddress);
+      console.log('[useX402Payment] Signature created, calling x402 API...');
+
+      // Step 2: Call x402 /pay endpoint (verify + settle in one call)
+      const x402Response = await fetch('https://api.onchain.fi/v1/pay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '',
+        },
+        body: JSON.stringify({
+          paymentHeader,
+          to: PAYMENT_CONFIG.RECIPIENT,
+          sourceNetwork: 'base',
+          destinationNetwork: 'base',
+          expectedAmount: amount,
+          expectedToken: 'USDC',
+          priority: 'balanced',
+        }),
       });
 
-      console.log('[useX402Payment] SDK pay result:', payResult);
+      const x402Data = await x402Response.json();
 
-      if (!payResult.success) {
-        console.error('[useX402Payment] Payment failed:', payResult.error || payResult);
-        throw new Error(payResult.error || 'Payment failed');
+      if (!x402Response.ok || x402Data.status !== 'success') {
+        console.error('[useX402Payment] x402 API error:', x402Data);
+        throw new Error(x402Data.error || x402Data.message || 'Payment settlement failed');
       }
 
-      // Generate paymentId from txHash or timestamp
-      const paymentId = payResult.txHash || `pay_${Date.now()}`;
-      const paymentHeader = payResult.txHash || '';
+      console.log('[useX402Payment] x402 API success:', x402Data);
 
-      console.log('[useX402Payment] Payment successful, txHash:', payResult.txHash);
+      // Generate paymentId from txHash
+      const paymentId = x402Data.data?.txHash || `pay_${Date.now()}`;
+      const txHash = x402Data.data?.txHash || '';
+
+      console.log('[useX402Payment] Payment successful, txHash:', txHash);
 
       // Determine source platform
       const sourcePlatform = farcasterContext?.fid ? 'farcaster_miniapp' : 'web';
@@ -93,7 +210,7 @@ export function useX402Payment(): UseX402PaymentResult {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentId,
-          paymentHeader,
+          paymentHeader: txHash,
           phraseCount,
           phrases,
           walletAddress: walletAddress.toLowerCase(),
@@ -115,18 +232,10 @@ export function useX402Payment(): UseX402PaymentResult {
       return {
         paymentId,
         transactionId: data?.transactionId || paymentId,
-        paymentHeader,
+        paymentHeader: txHash,
       };
     } catch (error) {
       console.error('[useX402Payment] Payment error:', error);
-
-      // Detect Privy auth error - wallet auto-connected without Privy session
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('No embedded or connected wallet')) {
-        console.log('[useX402Payment] Wallet not authenticated through Privy, prompting login');
-        login(); // Open Privy modal for user to authenticate
-        throw new Error('Please connect your wallet to enable payments');
-      }
 
       // Store failed payment in Supabase for tracking
       try {
@@ -160,16 +269,13 @@ export function useX402Payment(): UseX402PaymentResult {
 
   /**
    * Settlement confirmation (logging only)
-   * SDK pay() already handles settlement - this is just for debugging
+   * x402 API already handles settlement - this is just for debugging
    */
-  const settlePayment = async (
-    paymentId: string,
-    _paymentHeader: string
-  ) => {
+  const settlePayment = async (paymentId: string, _paymentHeader: string) => {
     setIsSettling(true);
     try {
-      // SDK pay() already handles settlement - this is just for logging
-      console.log('[useX402Payment] Settlement confirmed (handled by SDK pay()):', { paymentId });
+      // x402 API already handles settlement - this is just for logging
+      console.log('[useX402Payment] Settlement confirmed (handled by x402 API):', { paymentId });
     } finally {
       setIsSettling(false);
     }

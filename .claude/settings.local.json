@@ -35,7 +35,9 @@
       "Bash(dir /b \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\node_modules\\@onchainfi\\connect\\dist\")",
       "WebFetch(domain:docs.farcaster.xyz)",
       "Bash(dir:*)",
-      "WebFetch(domain:warpcast.com)"
+      "WebFetch(domain:warpcast.com)",
+      "WebFetch(domain:x402.gitbook.io)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

@@ -52,7 +52,7 @@ export function RegularMint({
         className="w-full rounded-lg bg-[#0000ff] px-6 py-3.5 md:py-3 font-medium text-white transition-colors hover:bg-[#3c8aff] disabled:cursor-not-allowed disabled:opacity-30"
       >
         {!clientConnected
-          ? "Connect Wallet"
+          ? "Wallet Required"
           : isMinting
           ? MESSAGES.MINTING
           : alreadyMinted

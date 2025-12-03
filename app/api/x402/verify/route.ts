@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         amount_usdc: expectedAmount,
         phrases: phrases,
         payment_status: paymentStatus,
-        mint_status: 'failed',  // Not minted yet, can retry
+        mint_status: 'not_started',  // Will be updated after mint attempt
         payment_header: paymentHeader || '',
         // Dynamic timestamp based on status
         ...(paymentStatus === 'settled'

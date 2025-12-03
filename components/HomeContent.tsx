@@ -6,8 +6,10 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useReadContract,
+  useAccount,
+  useSwitchChain,
 } from "wagmi";
-import { useOnchainWallet, useChainAlignment } from "@onchainfi/connect";
+import { base } from "wagmi/chains";
 import { parseEventLogs } from "viem";
 import { toast } from "sonner";
 import { WHATISBASEFOR_ABI } from "@/abi/WhatIsBaseFor.abi";
@@ -45,19 +47,30 @@ interface HomeContentProps {
 export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, logPrefix = "[Home]" }: HomeContentProps) {
   // Farcaster context for MiniApp wallet
   const { isFarcaster, wallet: fcWallet } = useFarcaster();
-  // OnchainConnect wallet for web mode (Privy)
-  // user object exists only when authenticated through Privy (not wagmi auto-detect)
-  const { isConnected: privyConnected, address: privyAddress, user } = useOnchainWallet();
 
-  // Only show as connected if Privy has a session (not just wagmi auto-detect)
-  // This prevents confusion when multiple wallets are installed
-  const hasPrivySession = !!user;
-  const isConnected = isFarcaster ? fcWallet.isConnected : (privyConnected && hasPrivySession);
-  const address = (isFarcaster ? fcWallet.address : (hasPrivySession ? privyAddress : undefined)) as `0x${string}` | undefined;
+  // Wagmi wallet for web mode (RainbowKit)
+  const { address: wagmiAddress, isConnected: wagmiConnected, chainId } = useAccount();
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
+
+  // Single source of truth per mode:
+  // MiniApp: use Farcaster embedded wallet
+  // Web: use wagmi (RainbowKit) wallet
+  const isConnected = isFarcaster ? fcWallet.isConnected : wagmiConnected;
+  const address = (isFarcaster ? fcWallet.address : wagmiAddress) as `0x${string}` | undefined;
 
   // Chain alignment - ensures wallet is on Base network
-  const { needsSwitch, promptSwitch, isSwitching } = useChainAlignment('base');
+  const needsSwitch = isConnected && chainId !== base.id;
+  const isSwitching = isSwitchingChain;
   const hasPromptedSwitch = useRef(false);
+
+  // Prompt to switch chain
+  const promptSwitch = async () => {
+    try {
+      switchChain?.({ chainId: base.id });
+    } catch (error) {
+      console.error("Failed to switch chain:", error);
+    }
+  };
 
   // Auto-switch to Base when connected on wrong chain (once per session)
   useEffect(() => {
@@ -69,7 +82,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     if (!isConnected) {
       hasPromptedSwitch.current = false;
     }
-  }, [isConnected, needsSwitch, isSwitching, promptSwitch]);
+  }, [isConnected, needsSwitch, isSwitching]);
 
   const [phrases, setPhrases] = useState(["", "", ""]);
   const [mintType, setMintType] = useState<"regular" | "custom" | null>(null);

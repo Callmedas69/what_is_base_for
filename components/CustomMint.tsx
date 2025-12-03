@@ -239,7 +239,7 @@ export function CustomMint({
         className="w-full rounded-lg bg-[#0000ff] px-6 py-3.5 md:py-3 font-medium text-white transition-all hover:bg-[#3c8aff] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
       >
         {!clientConnected
-          ? "Connect Wallet"
+          ? "Wallet Required"
           : isVerifying
           ? MESSAGES.PAYMENT_VERIFYING
           : isSettling
