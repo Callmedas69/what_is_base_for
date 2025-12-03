@@ -1,8 +1,9 @@
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
-import sharp from "sharp";
+import { Resvg } from "@resvg/resvg-js";
 import { WHATISBASEFOR_ABI } from "@/abi/WhatIsBaseFor.abi";
 import { CONTRACTS } from "@/lib/config";
+import path from "path";
 
 export async function GET(
   request: Request,
@@ -16,7 +17,7 @@ export async function GET(
       return new Response("Invalid tokenId", { status: 400 });
     }
 
-    // Create viem client (uses Base chain default RPC)
+    // Create viem client
     const client = createPublicClient({
       chain: base,
       transport: http(),
@@ -44,13 +45,26 @@ export async function GET(
     }
 
     const svgBase64 = jsonData.image.split(",")[1];
-    const svgBuffer = Buffer.from(svgBase64, "base64");
+    const svgString = Buffer.from(svgBase64, "base64").toString("utf-8");
 
-    // Convert SVG to PNG using sharp
-    const pngBuffer = await sharp(svgBuffer)
-      .resize(512, 512)
-      .png()
-      .toBuffer();
+    // Local TTF font paths for resvg (no system fonts on Vercel)
+    const dotoFontPath = path.join(process.cwd(), "public", "fonts", "Doto-Medium.ttf");
+    const robotoFontPath = path.join(process.cwd(), "public", "fonts", "Roboto-Regular.ttf");
+
+    // Convert SVG to PNG using resvg with bundled fonts
+    const resvg = new Resvg(svgString, {
+      fitTo: {
+        mode: "width",
+        value: 512,
+      },
+      font: {
+        fontFiles: [dotoFontPath, robotoFontPath],
+        loadSystemFonts: false,
+        defaultFontFamily: "Roboto",
+      },
+    });
+    const pngData = resvg.render();
+    const pngBuffer = pngData.asPng();
 
     // Return PNG with cache headers (immutable - NFT never changes)
     return new Response(pngBuffer, {

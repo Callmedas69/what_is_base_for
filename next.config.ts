@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
   },
+  serverExternalPackages: ["@resvg/resvg-js"],
   async rewrites() {
     return [
       {
