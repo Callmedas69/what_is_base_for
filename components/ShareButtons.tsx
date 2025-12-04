@@ -6,7 +6,6 @@ interface ShareButtonsProps {
   text: string;
   url: string;
   imageUrl?: string;
-  tokenId?: string;
   className?: string;
   size?: "sm" | "md" | "lg";
 }
@@ -15,17 +14,15 @@ export function ShareButtons({
   text,
   url,
   imageUrl,
-  tokenId,
   className = "",
   size = "md",
 }: ShareButtonsProps) {
   const { isFarcaster, isReady, actions } = useFarcaster();
 
-  // Twitter share URL - use share page for NFT-specific og:image
-  const twitterShareUrl = tokenId ? `${url}/share/${tokenId}` : url;
+  // Twitter share URL (image preview via OpenGraph tags)
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
     text
-  )}&url=${encodeURIComponent(twitterShareUrl)}`;
+  )}&url=${encodeURIComponent(url)}`;
 
   // Farcaster share URL (with explicit image embed) - used as fallback in web mode
   const getFarcasterUrl = () => {

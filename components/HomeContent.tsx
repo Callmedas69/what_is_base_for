@@ -128,7 +128,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     query: { enabled: !!mintedTokenId },
   });
 
-  const { data: regularMinted = 0n } = useReadContract({
+  const { data: regularMinted = 0n, refetch: refetchRegularMinted } = useReadContract({
     address: CONTRACTS.WHATISBASEFOR,
     abi: WHATISBASEFOR_ABI,
     functionName: "mintedRegularPerWallet",
@@ -136,7 +136,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     query: { enabled: !!address },
   });
 
-  const { data: customMinted = 0n } = useReadContract({
+  const { data: customMinted = 0n, refetch: refetchCustomMinted } = useReadContract({
     address: CONTRACTS.WHATISBASEFOR,
     abi: WHATISBASEFOR_ABI,
     functionName: "mintedCustomPerWallet",
@@ -345,6 +345,10 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
           setMintedTokenId(tokenId);
           setShowModal(true);
 
+          // Refetch mint counts to update UI (prevent double mint)
+          refetchRegularMinted();
+          refetchCustomMinted();
+
           // Record mint success in database (payment was already settled pre-mint)
           if (paymentData && mintType === "custom") {
             console.log(`${logPrefix} Recording mint success...`);
@@ -371,7 +375,7 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
     };
 
     handleMintSuccess();
-  }, [receipt, isSuccess, paymentData, mintType, recordMintSuccess, updateMintStatus, logPrefix]);
+  }, [receipt, isSuccess, paymentData, mintType, recordMintSuccess, updateMintStatus, logPrefix, refetchRegularMinted, refetchCustomMinted]);
 
   // Handle mint failure - covers both writeContract rejection and tx revert
   useEffect(() => {
