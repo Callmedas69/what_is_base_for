@@ -152,6 +152,7 @@ export function SuccessModal({
               text={shareText}
               url={appUrl}
               imageUrl={`${appUrl}/api/nft/${tokenIdString}/image.png`}
+              tokenId={tokenIdString}
               size="sm"
             />
           </div>

@@ -42,7 +42,8 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfix: require Node 20.18+ for Vercel deployment\n\n- Add .nvmrc with Node 20\n- Add engines field to package.json\n- Regenerate package-lock.json\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
       "Bash(ping:*)",
-      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\test-nft.png\")"
+      "Bash(del \"D:\\Harry\\BasedNouns\\CodeProject\\basefor_front\\test-nft.png\")",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

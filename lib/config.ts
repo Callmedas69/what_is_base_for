@@ -86,16 +86,16 @@ export const APP_CONFIG = {
   DESCRIPTION: "A fully onchain collection of base spirits",
   AUDIO_PATH: "/assets/What is Base for.mp3",
   TOKEN_DISPLAY_ID: 0, // Which token ID to display in hero
-  SHARE_TEXT: "What does Base mean to you, when your words live forever onchain?",
+  SHARE_TEXT: "What does Base mean to you, when your words live forever onchain?\n\n",
   SHARE_TEXTS_AFTER_MINT: [
-    "To me, Base feels like: {phrase1}, {phrase2}, {phrase3}",
-    "My Base is made of: {phrase1}, {phrase2}, {phrase3}",
-    "Base, to my heart, is: {phrase1}, {phrase2}, {phrase3}",
-    "If I describe Base in fragments: {phrase1}, {phrase2}, {phrase3}",
-    "Base, in my own small words: {phrase1}, {phrase2}, {phrase3}",
-    "What Base whispers to me: {phrase1}, {phrase2}, {phrase3}",
-    "Base, in pieces of feeling: {phrase1}, {phrase2}, {phrase3}",
-    "What Base means to me: {phrase1}, {phrase2}, {phrase3}",
+    "To me, Base feels like: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "My Base is made of: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "Base, to my heart, is: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "If I describe Base in fragments: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "Base, in my own small words: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "What Base whispers to me: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "Base, in pieces of feeling: {phrase1}, {phrase2}, {phrase3}\n\n",
+    "What Base means to me: {phrase1}, {phrase2}, {phrase3}\n\n",
   ],
 } as const;
 
