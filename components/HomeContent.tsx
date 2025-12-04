@@ -531,8 +531,15 @@ export function HomeContent({ isMiniApp = false, onFarcasterShare, onOpenUrl, lo
         </div>
       </main>
 
-      <div className="w-full flex flex-col items-center gap-2 py-4 px-4 md:flex-row md:justify-between md:px-6">
+      <div className="w-full flex flex-col items-center gap-2 py-8 px-4 md:flex-row md:justify-between md:px-6">
         <TotalSupply totalSupply={totalSupply} />
+        <Image
+          src="/x402-payments-enabled.png"
+          alt="X402 Payments Enabled"
+          width={75}
+          height={16}
+          className="h-auto"
+        />
         <div className="flex items-center gap-4">
           <ProfileBadge />
           <button

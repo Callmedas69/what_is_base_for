@@ -182,7 +182,7 @@ export function CustomMint({
           CUSTOM MINT
         </h3>
         <p className="text-sm md:text-xs text-[#5b616e] italic">
-          your phrases • {currentPrice} USDC {clientConnected && `(${remainingMints} remaining)`}
+          {clientConnected && `(${remainingMints} remaining)`}
         </p>
       </div>
 

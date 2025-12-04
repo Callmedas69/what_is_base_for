@@ -43,7 +43,7 @@ export function RegularMint({
           FREE MINT
         </h3>
         <p className="italic text-sm md:text-xs text-[#5b616e]">
-          pre-defined phrases {clientConnected && `(${remainingMints}/${maxMints} remaining)`}
+          {clientConnected && `(${remainingMints}/${maxMints} remaining)`}
         </p>
       </div>
       <button
